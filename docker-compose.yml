@@ -1,0 +1,17 @@
+name: pinful
+services:
+  pinful:
+    container_name: pinful
+    image: pinful:local
+    build: .
+    ports:
+      - "127.0.0.1:${PINFUL_PORT:-${PINFULL_PORT:-3002}}:3000"
+    environment:
+      PINLESS_DATA: /data
+    volumes:
+      - pinful-data:/data
+    restart: unless-stopped
+volumes:
+  pinful-data:
+    # Preserve the existing standalone installation's data across the rename.
+    name: pinfull_pinfull-data

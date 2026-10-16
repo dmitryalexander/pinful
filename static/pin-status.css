@@ -1,0 +1,3 @@
+/* Checked unresolved links / confirmed empty related walls, visible before clicking. */
+.pin-video-tile.pin-no-related:hover::before{content:'';position:absolute;inset:0;border:3px solid #b36bff;box-sizing:border-box;pointer-events:none;z-index:6;border-radius:0}
+.pin-video-tile.pin-no-related:hover:has(>video)::before{border-radius:10px}

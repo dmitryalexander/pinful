@@ -1,0 +1,55 @@
+body, input, button, select, textarea, .continuous-status, .continuous-status button { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+.media-wall { gap:4px!important; }
+.media-wall > * { padding:0!important; border-radius:0!important; }
+.media-wall img,.media-wall video,.pin-container,.pin-container > img,.pin-video-tile video { border-radius:0!important; }
+.pin-video-tile.pin-video-tile { position:relative; display:block; width:100%; height:auto; padding:0; margin:0; border-radius:0; overflow:hidden; isolation:isolate; box-sizing:border-box; }
+.pin-video-tile video,.pin-video-tile img { display:block; width:100%; height:auto; margin:0; }
+.pin-image-link { display:block; }
+.pin-media-open { position:absolute; top:10%; left:0; width:100%; height:10%; z-index:3; display:block; }
+.pin-video-play { position:absolute; top:20%; bottom:0; left:0; width:100%; height:80%; min-height:0; margin:0; padding:0; box-sizing:border-box; border:0; border-radius:0; background:transparent; cursor:pointer; z-index:2; }
+.pin-video-play:disabled { cursor:wait; }
+.pin-video-play > *, .pin-video-download > * { display:none; }
+.pin-video-tile .pin-video-actions { position:absolute; inset:0; display:block; width:100%; height:100%; padding:0; margin:0; border-radius:0; overflow:visible; pointer-events:none; z-index:3; }
+.pin-video-actions .pin-video-download { position:absolute; top:0; left:0; width:100%; height:10%; min-height:36px; margin:0; padding:0; border:0; border-radius:0; background:transparent; pointer-events:auto; cursor:pointer; }
+.pin-video-tile.is-playing:has(> video:hover)::after,
+.pin-video-tile:has(.pin-media-open:hover)::after,
+.pin-video-tile:has(.pin-media-open:focus-visible)::after,
+.pin-video-tile:has(.pin-image-link:hover)::after,
+.pin-video-tile:has(.pin-image-link:focus-visible)::after,
+.pin-video-tile:has(.pin-video-play:hover)::after,
+.pin-video-tile:has(.pin-video-play:focus-visible)::after,
+.pin-video-tile:has(.pin-video-download:hover)::after,
+.pin-video-tile:has(.pin-video-download:focus-visible)::after { content:''; position:absolute; inset:0; border:2px solid #929292; border-radius:0; pointer-events:none; z-index:5; box-sizing:border-box; }
+.pin-video-tile:has(.pin-media-open:hover)::after,.pin-video-tile:has(.pin-media-open:focus-visible)::after { border-color:#608faf; }
+.pin-video-tile:has(.pin-video-download:hover)::after,.pin-video-tile:has(.pin-video-download:focus-visible)::after { border-color:#b96170; }
+.pin-media-open:focus-visible,.pin-image-link:focus-visible,.pin-video-play:focus-visible,.pin-video-download:focus-visible { outline:none; }
+.pin-video-status { position:absolute; z-index:4; bottom:max(12%,48px); left:10px; right:10px; padding:9px 11px; background:rgba(20,20,20,.92); color:#eee; font-size:13px; line-height:1.4; text-align:center; pointer-events:none; overflow-wrap:anywhere; }
+.pin-video-tile [hidden] { display:none!important; }
+.pin-video-tile.pin-video-tile:has(> video), .pin-video-tile > video,
+.pin-video-tile:has(> video)::after { border-radius:10px!important; }
+@media(pointer:coarse) { .pin-video-actions .pin-video-download { min-height:44px; } }
+/* Keep the two video bands at exactly 0–10% and 10–20%, without overlap. */
+.pin-video-tile:has(> video) .pin-video-download { min-height:0; }
+.pin-video-frame.pin-video-frame { display:block; position:relative; width:100%; height:auto; margin:0; padding:8px; box-sizing:border-box; border-radius:18px; background:#242522; overflow:hidden; }
+
+/* Images and GIFs: 10-20% strip opens that image in Google Lens (blue border). */
+.pin-lens-open { position:absolute; top:max(10%,36px); left:0; width:100%; height:max(10%,36px); z-index:3; display:block; }
+.pin-video-tile:has(.pin-lens-open:hover)::after,.pin-video-tile:has(.pin-lens-open:focus-visible)::after { content:''; position:absolute; inset:0; border:2px solid #608faf; border-radius:0; pointer-events:none; z-index:5; box-sizing:border-box; }
+.pin-lens-open:focus-visible { outline:none; }
+@media(pointer:coarse) { .pin-lens-open { top:max(10%,44px); height:max(10%,44px); } }
+
+/* Hover previews (October 14, 2026): pause symbol while waiting, a ring while loading (it keeps spinning with Windows animations off). */
+.pin-video-loader{position:absolute;left:50%;top:50%;z-index:6;width:36px;height:36px;box-sizing:border-box;margin:-18px 0 0 -18px;border:3px solid #ffffff50;border-top-color:#fff;border-right-color:#fff;border-radius:50%;background:#0002;box-shadow:0 0 0 5px #0003;pointer-events:none;animation:pin-video-spin .75s linear infinite}
+@keyframes pin-video-spin{to{transform:rotate(360deg)}}
+.pin-video-loader.pin-video-wait{animation:none;border:0;border-radius:0;background:linear-gradient(to right,#fff 0 32%,transparent 32% 68%,#fff 68%);width:20px;height:26px;margin:-13px 0 0 -10px;box-shadow:none;filter:drop-shadow(0 1px 3px #000)}
+
+/* Pins already saved in any playlist (October 15, 2026): the gray "open pin" hover border is green.
+   Blue (open / Lens) and rose (download) strips keep their colors. Card class pn-in-list is set in modern.js. */
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list).is-playing:has(> video:hover)::after,
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-image-link:hover)::after,
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-image-link:focus-visible)::after,
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-video-play:hover)::after,
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-video-play:focus-visible)::after { border-color:#43b56b; }
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-media-open:hover)::after,:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-media-open:focus-visible)::after,
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-lens-open:hover)::after,:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-lens-open:focus-visible)::after { border-color:#608faf; }
+:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-video-download:hover)::after,:is(.pn-in-list .pin-video-tile,.pin-video-tile.pn-in-list):has(.pin-video-download:focus-visible)::after { border-color:#b96170; }

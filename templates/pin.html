@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script src="/static/app-data.js?v=1"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ if ne .Pin.Title "" }}{{ .Pin.Title }} - Pinful{{ else if ne .Pin.Description "" }}{{ if gt (len .Pin.Description) 50 }}{{ slice .Pin.Description 0 50 }}... - Pinful{{ else }}{{ .Pin.Description }} - Pinful{{ end }}{{ else if ne .Pin.PinnerName "" }}Pin by {{ .Pin.PinnerName }} - Pinful{{ else }}Pinful{{ end }}</title>
+    <meta property="og:title" content="{{ if ne .Pin.Title "" }}{{ .Pin.Title }}{{ else if ne .Pin.Description "" }}{{ .Pin.Description }}{{ else if ne .Pin.PinnerName "" }}Pin by {{ .Pin.PinnerName }}{{ else }}Pinful{{ end }}">
+    <meta property="og:description" content="{{ if ne .Pin.Description "" }}{{ .Pin.Description }}{{ else if ne .Pin.Title "" }}{{ .Pin.Title }}{{ else if ne .Pin.PinnerName "" }}Pin by {{ .Pin.PinnerName }}{{ else }}A pin on Pinful{{ end }}">
+    {{ if .OGImage }}<meta property="og:image" content="{{ .OGImage }}">{{ end }}
+    <meta property="og:url" content="{{ .PageURL }}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Pinful">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%221em%22 font-size=%2280%22>📌</text></svg>">
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            scrollbar-color: gray #121212;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100vw;
+            gap: 1rem;
+            width: 90%;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+
+        input#search {
+            all: unset;
+            background: #222;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            border-radius: 24px;
+            width: 100%;
+        }
+
+        input#search:-webkit-autofill,
+        input#search:-webkit-autofill:hover,
+        input#search:-webkit-autofill:focus,
+        input#search:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #222 inset !important;
+            -webkit-text-fill-color: #fff !important;
+        }
+
+        .search {
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            display: flex;
+        }
+
+        button[type="submit"] {
+            all: unset;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 30px;
+            width: 30px;
+            color: #e60023;
+            background-color: #222;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-full {
+            display: inline;
+        }
+        .logo-short {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .logo-full {
+                display: none;
+            }
+            .logo-short {
+                display: inline;
+            }
+            .grid-container {
+                columns: 2;
+                width: 100%;
+                column-gap: 0.5rem;
+            }
+            .grid-container > div {
+                margin: 0 0 0.5rem 0;
+                padding: 2px;
+            }
+        }
+
+        .pin-container {
+            max-width: 800px;
+            width: 100%;
+            background: #1e1e1e;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .pin-container img, .pin-container video {
+            height: auto;
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .pin-info {
+            padding: 20px;
+        }
+
+        .pin-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .pin-description {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .pin-pinner {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Related Pins span the window like the search page wall (8px from each
+           edge; the body has 20px padding), so zooming out adds more columns. */
+        .related-section {
+            width: calc(100% + 24px);
+            max-width: none;
+            margin: 0 -12px;
+        }
+
+        .related-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-left: 10px;
+        }
+
+        .grid-container {
+            columns: 5 200px;
+            column-gap: 1.5rem;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .grid-container > div {
+            margin: 0 1.5rem 1.5rem 0;
+            display: inline-block;
+            width: 100%;
+            padding: 5px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .grid-container > div img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            display: block;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .pin-end-of-line {
+            box-sizing: border-box;
+            max-width: 700px;
+            margin: 36px auto;
+            padding: 0 20px 40px;
+            text-align: center;
+            color: #eee;
+        }
+        .pin-end-of-line img {
+            display: block;
+            width: min(340px, 100%);
+            height: auto;
+            margin: 0 auto;
+            mix-blend-mode: screen;
+        }
+        .pin-end-of-line h1 { margin: 0; font: 700 clamp(44px, 8vw, 68px)/1.1 system-ui; color: #e9b344; }
+        .pin-end-of-line h2 { margin: 12px 0; font: 500 clamp(20px, 4vw, 28px)/1.3 system-ui; }
+        .pin-end-of-line p { margin: 12px 0 24px; font: 15px/1.6 system-ui; color: #aaa; }
+        .pin-retry {
+            display: inline-block;
+            padding: 10px 22px;
+            border: 1px solid #e9b344;
+            border-radius: 24px;
+            color: #e9b344;
+            text-decoration: none;
+        }
+        .pin-retry:hover, .pin-retry:focus-visible {
+            background: #30291b;
+            outline: 2px solid #e9b344;
+            outline-offset: 3px;
+        }
+        .no-related {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+    </style>
+    <script defer src="/static/player.js?v=blue-default1"></script><script defer src="/static/media-shortcuts.js?v=hover-keys1"></script>
+<link rel="stylesheet" href="/static/wall.css?v=pinless-fix1">
+
+<script defer src="/static/pin-recovery.js?v=pin-recovery1"></script><script defer src="/static/wall-scroll.js?v=featured-fallback2"></script>
+<link rel="stylesheet" href="/static/player.css?v=savedgreen1"><link rel="stylesheet" href="/static/discovery.css?v=feed1"><link rel="stylesheet" href="/static/interest-bar.css?v=spaced-dots1"><script defer src="/static/loading-warning.js?v=creator4"></script><script defer src="/static/discovery.js?v=pinful-name1"></script><link rel="stylesheet" href="/static/modern-terms.css?v=20261008"><link rel="stylesheet" href="/static/modern.css?v=hidden1"><script defer src="/static/modern.js?v=blue-default1"></script><script defer src="/static/search-tags.js?v=tags3"></script><script defer src="/static/search-groups.js?v=groups4"></script><script defer src="/static/history-guide.js?v=history5"></script><script defer src="/static/favorites-guide.js?v=fav4"></script><script defer src="/static/feed-guide.js?v=pinful-name1"></script><script defer src="/static/hidden-guide.js?v=hidden2"></script><script defer src="/static/interest-bar.js?v=feed-left1"></script><link rel="stylesheet" href="/static/pin-detail.css?v=featured-fallback2"><link rel="stylesheet" href="/static/creator.css?v=pinterms1"><script defer src="/static/creator.js?v=pinterms1"></script><link rel="stylesheet" href="/static/pinterest-session.css?v=session1"><script defer src="/static/pinterest-session.js?v=session-retry1"></script></head>
+
+<body class="pin-detail-page">
+    <div class="search-container">
+        <h1><a href="/"><span class="logo-short">P</span><span class="logo-full">Pinful</span></a></h1>
+        <form action="/search/pins/" method="GET" class="search">
+            <input id="search" type="text" name="q" placeholder="Search for the cute cats, memes, etc."
+                value="{{.Query}}" required />
+            <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-search">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg></button>
+        </form>
+    </div>
+
+    <section class="related-section" aria-label="Selected pin and related pins">
+    {{if and .PinLoadError (not .Related)}}
+    <section class="pin-end-of-line source-error" aria-labelledby="pin-end-title">
+        <img src="/static/warning.png" width="1254" height="1254" alt="Skull and crossbones cassette" />
+        {{if .PinNotFound}}
+        <h1 id="pin-end-title" data-confirmed-missing>404</h1>
+        <h2>This is the end of the line.</h2>
+        <p>Pinterest no longer supports this pin.</p>
+        {{else}}
+        <h1 id="pin-end-title">Couldn’t load this pin</h1>
+        <p class="pin-unavailable-note">Pinterest could not provide this pin’s details. This does not mean the pin was deleted.</p>
+        <a class="pin-retry" href="">Retry</a>
+        {{end}}
+        <a class="pin-retry" href="/?pt_page=discover">Back to the Feed</a>
+    </section>
+    {{else}}
+    {{if and .PinPreviewOnly (not .RelatedLoadError) (not .InheritedRecommendations)}}
+    <p class="pin-preview-note" role="status">Showing the image received from search. Full pin details are unavailable.</p>
+    {{end}}
+    {{if .PinLoadError}}
+    <section class="pin-load-error" role="status" style="text-align:center;padding:24px">
+        <p>Could not load this pin from Pinterest. It may be temporarily unavailable or require access on Pinterest.</p>
+        <a class="pin-retry" href="">Retry</a>
+    </section>
+    {{end}}
+    {{if and .RelatedLoadError (not .InheritedRecommendations)}}
+    <section class="source-error pin-compact-notice" role="status">
+        <p>{{if .PinPreviewOnly}}Showing the image received from search. {{end}}Could not load related pins. Pinful could not resolve this request.</p>
+        <a class="pin-retry" href="">Retry</a>
+    </section>
+    {{end}}
+    <div class="grid-container pin-detail-wall" {{if .InheritedRecommendations}}data-previous-wall="true"{{end}} data-pinterest-recommendations="{{if .Related}}available{{else}}unavailable{{end}}" {{if or .PinPreviewOnly .InheritedRecommendations}}data-lens-page="true"{{else}}{{if not .Related}}data-single-pin="true"{{end}}{{end}}>
+    {{if not .PinLoadError}}
+    <article class="pin-featured" data-featured-pin="{{ .Pin.ID }}">
+        <div class="pin-container">
+        {{if .Pin.VideoURL}}
+        <video controls playsinline preload="none" poster="{{ .Pin.ImageURL }}" src="{{ .Pin.VideoURL }}" aria-label="{{ if .Pin.Title }}{{ .Pin.Title }}{{ else }}Pin video{{ end }}"></video>
+        {{else if .Pin.ImageURL}}
+        <a href="{{ .PinSelfURL }}"><img loading="lazy" decoding="async" src="{{ .Pin.ImageURL }}" width="{{ .Pin.ImageWidth }}" height="{{ .Pin.ImageHeight }}" alt="{{ if .Pin.Title }}{{ .Pin.Title }}{{ else if .Pin.Description }}{{ .Pin.Description }}{{ else if .Pin.PinnerName }}Pin by {{ .Pin.PinnerName }}{{ else }}Pin image{{ end }}" /></a>
+        {{end}}
+    </div>
+        <div class="pin-creator-strip pin-pinner">
+        {{ if .Pin.PinnerUser }}<span class="pin-credit-label">Pinned by</span><a href="/{{ .Pin.PinnerUser }}/">{{ if .Pin.PinnerName }}{{ .Pin.PinnerName }}{{ else }}{{ .Pin.PinnerUser }}{{ end }}</a>
+        {{ else if .Pin.PinnerName }}<span class="pin-credit-label">Pinned by</span><span>{{ .Pin.PinnerName }}</span>
+        {{ else }}<span class="pin-credit-label">Creator unavailable</span>{{ end }}
+        </div>
+    </article>
+    {{end}}
+        {{if .Related}}
+            {{range .Related}}
+            <div>
+                {{if .VideoURL}}
+<video controls playsinline preload="none" poster="{{.ImageURL}}" src="{{.VideoURL}}" style="width:100%;height:auto;border-radius:16px;display:block" aria-label="Pin video"></video>
+<a href="/pin/{{.ID}}?wall_context={{ $.WallContext }}">Open pin</a>
+{{else}}
+<a href="/pin/{{.ID}}?q={{ $.Query | urlquery }}&from={{ $.Pin.ID }}&wall_context={{ $.WallContext }}">
+                    <img loading="lazy" decoding="async" src="{{.ImageURL}}" width="{{.ImageWidth}}" height="{{.ImageHeight}}" alt="{{ if .Title }}{{ .Title }}{{ else if .Description }}{{ .Description }}{{ else if .PinnerName }}Pin by {{ .PinnerName }}{{ else }}Pin image{{ end }}" title="{{ if .Title }}{{ .Title }}{{ else if .Description }}{{ .Description }}{{ else if .PinnerName }}Pin by {{ .PinnerName }}{{ else }}Pin image{{ end }}" />
+                </a>
+{{end}}
+            </div>
+            {{end}}
+        {{end}}
+        </div>
+        {{if .RelatedBookmark}}
+        <div class="pagination-container">
+            <h2 style="text-align: center;">
+                <a href="/pin/{{ .Pin.ID }}?q={{ .Query | urlquery }}&from={{ .From | urlquery }}&next&cursor={{ .RelatedBookmark | urlquery }}&wall_context={{ .WallContext }}{{if .InheritedRecommendations}}&wall_fallback=1{{end}}">Next page</a>
+            </h2>
+        </div>
+        {{end}}
+        {{if and (not .RelatedLoadError) (not .Related) (not .RelatedBookmark)}}
+        <div class="no-related">No related pins found</div>
+        {{end}}
+    {{end}}
+    </section>
+</body>
+
+</html>

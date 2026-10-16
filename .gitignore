@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+data/
+dist/
+node_modules/
+backup*/
+*.log
+*.exe
+*.test
+*.out
+pinful
+pinfull
+pinless
+go.work*
+.DS_Store
+Thumbs.db

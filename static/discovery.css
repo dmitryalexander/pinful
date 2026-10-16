@@ -1,0 +1,16 @@
+body.pinless-discovery{display:block!important;height:auto!important;margin:0!important;background:#121212;color:#eee;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+.pinless-discovery .pt-header{display:flex;align-items:center;width:100%;box-sizing:border-box;position:sticky;top:0;z-index:20;background:#121212;padding:5px 8px;gap:8px;min-height:42px}
+.pinless-discovery .pt-search{position:relative;display:flex;margin:0!important;padding:0!important;box-sizing:border-box}
+.pinless-discovery .pt-search input{box-sizing:border-box!important;width:100%!important;min-width:0!important;color:#eee!important;outline:none}
+.pinless-discovery .pt-search input:focus-visible{outline:2px solid #608faf}
+.pinless-discovery .pt-search button{position:absolute!important;top:50%!important;transform:translateY(-50%)!important;border:0!important;padding:0!important;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pinless-discovery .pt-nav{display:flex;align-items:center}
+.pinless-discovery .pt-menu{position:relative}
+.pinless-discovery .quiet-menu-panel{position:absolute;top:calc(100% + 8px);right:0;min-width:235px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:8px;border:1px solid #3b3b3b;border-radius:14px;background:#202020;box-shadow:0 10px 30px #0008}
+.pinless-discovery .pt-menu-item{display:block!important;box-sizing:border-box;width:100%;margin:0!important;padding:10px!important;font:13px/1.4 system-ui,sans-serif!important;color:#ddd!important;text-align:left;text-decoration:none;background:none!important;border:0!important;border-radius:6px!important;cursor:pointer}
+.pinless-discovery .pt-menu-item:hover,.pinless-discovery .pt-menu-item:focus-visible{background:#303030!important;color:#fff!important}
+.pinless-discovery [data-home-feed]{width:100%;padding:0 8px;box-sizing:border-box}
+.pinless-discovery [data-home-feed] > div{display:block;overflow:hidden}
+.pinless-discovery [data-home-feed] img{display:block;width:100%;height:auto}
+.pinless-discovery [data-home-feed] a{color:inherit;text-decoration:none}
+.pinless-discovery .pt-menu summary::-webkit-details-marker{display:none}

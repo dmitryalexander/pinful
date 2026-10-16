@@ -1,0 +1,235 @@
+/* A compact, horizontally scrolling discovery bar inspired by the supplied reference. */
+.pt-interest-editor{box-sizing:border-box;width:min(680px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:24px;border:1px solid #3b3b3b;border-radius:16px;background:#202020;color:#eee;font:14px/1.5 system-ui,sans-serif;box-shadow:0 16px 60px #0008}
+.pt-interest-editor::backdrop{background:#0009}
+.pt-interest-editor h2{margin:0 0 8px;font-size:22px;color:#fff}
+.pt-interest-editor p{margin:8px 0 16px;color:#aaa}
+.pt-interest-editor label{display:block;margin-bottom:6px;color:#eee}
+.pt-interest-editor textarea{box-sizing:border-box;width:100%;height:min(380px,45vh);resize:vertical;padding:12px;border:1px solid #555;border-radius:8px;background:#121212;color:#eee;font:14px/1.6 system-ui,sans-serif}
+.pt-interest-editor textarea:focus{outline:2px solid var(--pt-accent);outline-offset:1px}
+.pt-interest-editor .pt-interest-count{font-size:12px;margin:8px 0 18px}
+.pt-interest-editor .pt-interest-error{color:#ffaaaa}
+.pt-interest-editor-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pt-interest-editor-actions span{flex:1}
+.pt-interest-editor-actions button{margin:0;padding:8px 12px;border:1px solid #555;border-radius:8px;background:#292929;color:#eee;font:500 13px/1.4 system-ui,sans-serif;cursor:pointer}
+.pt-interest-editor-actions button:hover{background:#383838}
+.pt-interest-editor-actions .pt-interest-save{background:var(--pt-accent);border-color:var(--pt-accent);color:#111}
+.pt-interest-editor-actions button:focus-visible{outline:2px solid var(--pt-accent);outline-offset:2px}
+body.pt-youtube .pt-header.pt-interest-header{padding:5px 8px!important;gap:8px!important;flex-wrap:nowrap!important;justify-content:flex-start!important;min-height:40px!important;margin-bottom:4px!important}
+body.pt-youtube .pt-header .pt-brand{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 32px!important;width:32px!important;height:32px!important;box-sizing:border-box;border:1px solid #3b3b3b!important;padding:0!important;margin:0!important;border-radius:50%!important;background:#202020!important;color:#ddd!important;font:600 13px/1 system-ui,sans-serif!important;text-decoration:none!important}
+body.pt-youtube .pt-header .pt-brand:hover{background:#2c2c2c!important;color:#fff!important;border-color:#555!important}
+body.pt-youtube .pt-header .pt-brand:focus-visible{outline:2px solid var(--pt-accent);outline-offset:2px}
+body.pt-youtube .pt-interest-header .pt-search{flex:0 0 220px!important;max-width:220px!important;min-width:0!important;order:0!important}
+body.pt-youtube .pt-interest-header .pt-search input{height:28px!important;padding:4px 34px 4px 12px!important;font-size:12px!important;border:0!important;border-radius:999px!important;background:#222!important}
+body.pt-youtube .pt-interest-header .pt-search button{left:auto!important;right:10px!important;width:22px!important;height:22px!important;background:transparent!important;color:var(--pt-accent)!important}
+.pt-interest-header .pt-search button svg{width:17px!important;height:17px!important}
+.pt-interest-bar{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden;padding:0!important;margin:0!important}
+.pt-interest-scroll{display:flex;align-items:center;gap:6px;overflow-x:auto;min-width:0;flex:1;scrollbar-width:none;overscroll-behavior-x:contain;cursor:grab;user-select:none;touch-action:pan-x pan-y}
+.pt-interest-scroll.is-dragging,.pt-interest-scroll.is-dragging .pt-interest-chip{cursor:grabbing}
+.pt-interest-scroll::-webkit-scrollbar{display:none}
+.pt-interest-chip{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;white-space:nowrap;height:28px!important;margin:0!important;padding:0 10px!important;border:1px solid #3b3b3b;border-radius:999px;background:#202020;color:#ddd!important;font:500 12px/1.2 system-ui,sans-serif;text-decoration:none!important;cursor:pointer}
+.pt-interest-scroll .pt-interest-chip{display:block;line-height:26px;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.pt-interest-chip:hover{background:#2c2c2c;color:#fff!important;border-color:#555}
+.pt-interest-chip:focus-visible{outline:2px solid var(--pt-accent);outline-offset:-3px}
+body.pt-youtube .pt-interest-header .pt-nav{position:static!important;transform:none!important;margin:0 0 0 auto!important;gap:8px!important;flex:0 0 auto}
+.pt-interest-header .pt-nav-link{display:none!important}
+.pt-youtube .pt-nav .pt-menu>summary,.pt-youtube .pt-header .pt-filters>summary{border:1px solid #3b3b3b!important;border-radius:50%!important;background:#202020!important;width:32px!important;height:32px!important;padding:0!important;margin:0!important;display:flex!important;align-items:center;justify-content:center;box-sizing:border-box;font:600 13px/1 system-ui,sans-serif!important;color:#ddd!important;list-style:none;cursor:pointer}
+.pt-youtube .pt-header .pt-filters{position:relative;display:block!important;margin:0!important;flex:0 0 auto}
+.pt-youtube .pt-header .pt-filters[open]>summary,.pt-youtube .pt-nav .pt-menu[open]>summary{border-color:var(--pt-accent)!important;color:#fff!important}
+.pt-youtube .pt-header .pt-filters #filters-box{position:absolute!important;top:calc(100% + 10px);left:0;box-sizing:border-box;width:min(720px,calc(100vw - 32px));max-width:none!important;max-height:calc(100vh - 100px);overflow:auto;z-index:50;padding:18px!important;margin:0!important;background:#202020;border:1px solid #3b3b3b;border-radius:14px;box-shadow:0 10px 30px #0008;white-space:normal}
+.pt-youtube .pt-nav #filters-flex{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:16px;align-items:start}
+.pt-youtube .pt-nav .filter-column{padding:0!important;margin:0!important;width:auto!important}
+.pt-youtube .pt-nav #filters-box fieldset{padding:0!important;margin:0!important;min-width:0}
+.pt-youtube .pt-nav #filters-box .filter-options>div{display:flex;align-items:baseline;gap:6px;margin:7px 0}
+.pt-youtube .pt-nav #filters-box label{font-size:12px;white-space:normal}
+.pt-youtube .pt-nav #filters-apply{margin:14px 0 0!important;text-align:right}
+/* S and F circles, left of M: S opens the search terms editor, F (YouTube) the channels you subscribe to. Same look as M. */
+.pt-youtube .pt-nav>.pt-circle{display:flex!important;align-items:center;justify-content:center;flex:0 0 auto;box-sizing:border-box;width:32px!important;height:32px!important;padding:0!important;margin:0!important;border:1px solid #3b3b3b!important;border-radius:50%!important;background:#202020!important;color:#ddd!important;font:600 13px/1 system-ui,sans-serif!important;text-decoration:none!important;text-transform:none!important;cursor:pointer;-webkit-appearance:none;appearance:none}
+.pt-youtube .pt-nav>.pt-circle:hover,.pt-youtube .pt-nav .pt-menu:not([open])>summary:hover,.pt-youtube .pt-header .pt-filters:not([open])>summary:hover{border-color:#555!important;color:#fff!important}
+.pt-youtube .pt-nav>.pt-circle:focus-visible{outline:2px solid var(--pt-accent);outline-offset:2px}
+.pt-youtube .pt-header .pt-filters>summary svg{display:block;width:15px;height:15px}
+@media(max-width:900px){body.pt-youtube .pt-interest-header .pt-search{flex-basis:190px!important;max-width:190px!important}.pt-interest-bar{gap:6px}.pt-interest-scroll{gap:8px}}
+@media(max-width:600px){body.pt-youtube .pt-header.pt-interest-header{flex-wrap:wrap!important;gap:8px!important;padding:8px!important}body.pt-youtube .pt-interest-header .pt-search{flex:1 1 180px!important;max-width:none!important}.pt-interest-bar{order:3;flex:1 1 100%;width:100%}.pt-interest-scroll .pt-interest-chip{max-width:190px}}
+/* Recommended search term manager: a compact wall with independent ordering. */
+body.pt-term-manager-page #contents{margin-top:0!important;padding:0 4px!important}
+body.pt-term-manager-page .pt-header.pt-interest-header{margin-bottom:0!important;padding:3px 4px!important}
+body.pt-term-manager-page .pt-header .pt-nav{padding:0!important}
+#pt-term-manager{margin:0!important;padding:0!important}
+.pt-term-tools{display:flex;justify-content:space-between;gap:2px 12px;flex-wrap:wrap;margin:0;padding:0 4px 3px;color:#aaa;font:11px/1.3 system-ui}
+.pt-term-tools>span:first-child{color:#eee;font-weight:600}
+#pt-term-manager>[role=status]:empty{display:none}
+#pt-term-manager>[role=status]{margin:0 8px 10px;color:#ef9aa8;font:13px/1.5 system-ui}
+.pt-term-wall{display:block;columns:150px;column-gap:3px;padding:0 0 4px}
+.pt-term-tile{position:relative;display:flex;align-items:center;justify-content:center;break-inside:avoid;min-height:0;margin:0 0 3px;padding:7px 8px;box-sizing:border-box;border:1px solid #393a37;border-radius:5px;background:#242522;color:#eee!important;font:500 15px/1.3 system-ui;text-align:center;overflow-wrap:anywhere;text-decoration:none!important}
+.pt-term-tile:hover{background:#30312d;border-color:#666}
+.pt-term-tile:focus-visible{outline:2px solid var(--pt-accent);outline-offset:-3px}
+.pt-terms-clear-armed .pt-term-tile::after,.pt-terms-clear-armed .pt-interest-chip::after{content:'';position:absolute;inset:0;border-radius:inherit;background:rgba(180,43,65,.55);box-shadow:inset 0 0 0 2px #dc6578;pointer-events:none}
+.pt-interest-chip{position:relative}
+.pt-terms-empty{grid-column:1/-1;text-align:center;padding:40px;color:#aaa}
+@media(max-width:600px){.pt-term-wall{columns:120px}.pt-term-tile{font-size:14px;padding:6px}}
+
+.pt-youtube .pt-header .pt-filters-active>summary{border-color:var(--pt-accent)!important}
+.pt-filters #filters-flex{display:flex;flex-wrap:wrap;gap:18px}.pt-filters fieldset{border:0;padding:0;margin:0}.pt-filters legend{font-weight:600;margin-bottom:8px}.pt-filters .filter-options>div{margin:5px 0}.pt-filters label{margin-left:6px}.pt-filters #filters-apply{margin-top:16px}
+@media(max-width:600px){.pt-youtube .pt-header .pt-filters #filters-box{position:fixed!important;left:8px;top:60px;width:calc(100vw - 16px)}}
+
+/* Lists share the compact header and the video wall's resting frames. */
+body.pt-star-page #contents{margin-top:0!important}
+.pt-star-page .pt-interest-bar{display:none}
+.pt-list-bar{display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden}
+#pt-list-pills .pt-interest-chip[aria-pressed=true]{border-color:var(--pt-accent);background:#30291c;color:#fff!important}
+.pt-star-page #pt-star-note:empty{display:none}
+.pt-star-page #pt-star-note:not(:empty){margin:20px 8px;color:#aaa}
+.pt-star-page .pt-card.pt-in-active-list{background:var(--pt-frame)!important;box-shadow:none!important}
+#pt-list-dialog input{box-sizing:border-box;width:100%;margin:8px 0 20px;padding:10px 12px;border:1px solid #555;border-radius:20px;background:#121212;color:#fff}
+@media(max-width:600px){.pt-list-bar{order:3;flex:1 1 100%;width:100%}}
+
+.pt-star-page .pt-header .pt-nav{padding:0!important}
+.pt-list-bar{padding:0!important;margin:0!important;justify-content:flex-start;gap:6px}
+#pt-list-pills{flex:0 1 auto}
+
+/* Flexible dotted connectors keep the list group centered between navigation controls. */
+.pt-list-bar::before,.pt-list-bar::after{content:'';flex:1 1 0;min-width:8px;height:2px;background:radial-gradient(circle,#71634b 1px,transparent 1.2px) left center/7px 2px repeat-x;opacity:.65}
+.pt-list-bar{gap:10px}
+#pt-list-pills{flex:0 1 auto;min-width:0}
+#pt-list-pills .pt-list-delete-armed{background:#762e38!important;border-color:#e87080!important;color:#fff!important}
+.pt-star-page .pt-video.pt-list-delete-armed .pt-thumb::after{content:'';position:absolute;inset:0;z-index:30;border-radius:inherit;background:#b42b418c;box-shadow:inset 0 0 0 2px #dc6578;pointer-events:none}
+
+body.pt-youtube .pt-header .pt-search input:focus,body.pt-youtube .pt-header .pt-search input:focus-visible{outline:2px solid var(--pt-accent)!important;outline-offset:3px;box-shadow:none!important}
+
+/* Match native page geometry for both standalone managers. */
+body.pt-star-page,body.pt-term-manager-page{margin:0!important}
+body.pt-star-page #contents,body.pt-term-manager-page #contents{padding:0 8px!important}
+body.pt-term-manager-page .pt-header.pt-interest-header{padding:5px 8px!important;margin-bottom:4px!important}
+.pt-term-manager-page .pt-interest-bar{display:none!important}
+#pt-term-list-pills{flex:0 1 auto;min-width:0}
+#pt-term-list-pills [aria-pressed=true]{border-color:var(--pt-accent);background:#30291c;color:#fff!important}
+#interest-suggestions [data-term-list-id][aria-pressed=true]{border-color:var(--pt-accent);background:#30291c;color:#fff!important}
+#pt-term-list-pills .pt-list-delete-armed{background:#762e38!important;border-color:#e87080!important}
+@media(max-width:600px){body.pt-term-manager-page .pt-header.pt-interest-header{padding:8px!important}}
+
+/* Center recommendation pills using the same flexible dotted connectors as lists. */
+.pt-interest-bar{gap:10px}
+.pt-interest-bar::before,.pt-interest-bar::after{content:'';flex:1 1 0;min-width:8px;height:2px;background:radial-gradient(circle,#71634b 1px,transparent 1.2px) left center/7px 2px repeat-x;opacity:.65}
+.pt-interest-bar>.pt-interest-scroll{flex:0 1 auto}
+/* All header controls share amber focus, hover, and open-state highlights. */
+body.pt-youtube .pt-header :focus-visible{outline-color:var(--pt-accent)!important}
+body.pt-youtube .pt-header .pt-brand:hover,
+body.pt-youtube .pt-header .pt-nav>.pt-circle:hover,
+body.pt-youtube .pt-header details>summary:hover,
+body.pt-youtube .pt-header details[open]>summary,
+body.pt-youtube .pt-header .pt-filters-active>summary{border-color:var(--pt-accent)!important}
+
+/* Dedicated navigation pages and the current-page circle. */
+body.pt-youtube .pt-header a.pt-circle:is(.pt-filters-link,.pt-sandbox-link,.pt-discover-link){display:flex!important;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;border:1px solid #3b3b3b;border-radius:50%;background:#202020;color:#ddd;box-sizing:border-box}
+body.pt-youtube .pt-header [aria-current=page]{background:var(--pt-accent)!important;border-color:var(--pt-accent)!important;color:#17140e!important}
+.pt-navigation-page{max-width:1000px;margin:24px auto;padding:0 16px 32px;box-sizing:border-box}
+.pt-navigation-page h1{font:600 23px/1.3 system-ui;color:#ddd;margin:0 0 20px}
+.pt-navigation-page .pt-page-panel{display:block!important;background:#202020;border:1px solid #3b3b3b;border-radius:16px;padding:22px!important;box-sizing:border-box;width:100%}
+.pt-navigation-page .quiet-menu-panel{position:static;box-shadow:none;border:0;background:none;max-width:none;min-width:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.pt-navigation-page .pt-menu-item{border:1px solid #3b3b3b!important;border-radius:12px!important;padding:14px!important;background:#262626!important}
+.pt-navigation-page #filters-box{padding:0!important;margin:0!important;max-width:none!important}
+.pt-navigation-page #filters-flex{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:24px}
+.pt-navigation-page input{accent-color:var(--pt-accent)}
+.pt-navigation-page .filter-options>div{margin:12px 0}
+.pt-navigation-page .pt-page-note{color:#aaa;margin:0 0 24px;font-size:13px}
+.pt-navigation-page #filters-apply button{background:var(--pt-accent);color:#17140e;border:0;border-radius:20px;padding:10px 18px}
+@media(max-width:600px){.pt-navigation-page{margin:16px auto;padding:0 8px 24px}.pt-navigation-page .pt-page-panel{padding:16px!important}}
+
+body.pt-youtube .pt-header .pt-sandbox-link:hover{border-color:var(--pt-accent)!important}
+/* Links outside the right-hand nav need the same color and circular hover. */
+body.pt-youtube .pt-header a.pt-circle{color:#fff!important;text-decoration:none!important}
+body.pt-youtube .pt-header a.pt-circle:is(:hover,:focus-visible){color:#fff!important;border-color:var(--pt-accent)!important;outline:2px solid var(--pt-accent)!important;outline-offset:0;border-radius:50%!important}
+body.pt-youtube .pt-header a.pt-circle[aria-current=page]{color:#17140e!important}
+
+/* Settings use the same open canvas, rounded frames and amber states as the walls. */
+body.pt-youtube .pt-navigation-page{display:block;width:100%;max-width:1440px;margin:20px auto!important;padding:0 12px 32px!important;font:14px/1.4 system-ui,sans-serif}
+body.pt-youtube .pt-navigation-page>h1{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+body.pt-youtube .pt-navigation-page .pt-page-panel{width:100%;padding:0!important;background:none;border:0;border-radius:0}
+body.pt-youtube .pt-navigation-page #filters-box{position:static!important;display:block!important;width:100%!important;max-width:none!important;background:none!important;border:0!important;box-shadow:none!important}
+body.pt-youtube .pt-navigation-page #filters-flex{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px!important;align-items:start;width:100%}
+body.pt-youtube .pt-navigation-page .filter-column{width:auto!important;min-width:0;margin:0!important;padding:18px!important;box-sizing:border-box;background:var(--pt-frame);border-radius:20px}
+body.pt-youtube .pt-navigation-page fieldset{min-width:0;margin:0;padding:0;border:0}
+body.pt-youtube .pt-navigation-page legend{padding:0;margin:0 0 14px;font:600 15px/1.4 system-ui;color:#eee}
+body.pt-youtube .pt-navigation-page .filter-name{border:0!important;text-decoration:none!important}
+body.pt-youtube .pt-navigation-page .filter-options>div{position:relative;margin:6px 0!important}
+body.pt-youtube .pt-navigation-page .filter-options input{position:absolute;opacity:0;width:1px;height:1px}
+body.pt-youtube .pt-navigation-page .filter-options label{display:block;margin:0!important;padding:10px 12px;border:1px solid #44453f;border-radius:20px;background:#1d1e1b;color:#ddd;cursor:pointer;font:13px/1.4 system-ui}
+body.pt-youtube .pt-navigation-page .filter-options label:hover,body.pt-youtube .pt-navigation-page .filter-options input:focus-visible+label{border-color:var(--pt-accent);outline:1px solid var(--pt-accent)}
+body.pt-youtube .pt-navigation-page .filter-options input:checked+label{border-color:var(--pt-accent);background:#30291c;color:#fff}
+body.pt-youtube .pt-navigation-page .pt-page-note{text-align:center;margin:0 0 18px;color:#aaa;font:12px/1.4 system-ui}
+body.pt-youtube .pt-navigation-page #filters-apply{text-align:center;margin:18px 0 0}
+body.pt-youtube .pt-navigation-page #filters-apply button{background:var(--pt-accent)!important;color:#17140e!important;font:600 13px/1.4 system-ui;padding:12px 22px!important}
+body.pt-youtube .pt-navigation-page .quiet-menu-panel{position:static!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;width:100%;max-width:1120px;min-width:0;margin:0 auto;padding:0!important;background:none;border:0;box-shadow:none}
+body.pt-youtube .pt-navigation-page .pt-menu-item{display:flex!important;align-items:center;justify-content:center;width:100%;min-height:104px;padding:20px!important;border:1px solid #393a37!important;border-radius:20px!important;background:var(--pt-frame)!important;color:#eee!important;text-align:center;font:500 15px/1.4 system-ui!important;white-space:normal;overflow-wrap:anywhere}
+body.pt-youtube .pt-navigation-page .pt-menu-item:hover,body.pt-youtube .pt-navigation-page .pt-menu-item:focus-visible{border-color:var(--pt-accent)!important;outline:1px solid var(--pt-accent);background:#30291c!important}
+body.pt-youtube .pt-navigation-page .pt-menu-note{grid-column:1/-1;border:0;text-align:center;color:#aaa;padding:0 0 10px;font:13px/1.4 system-ui}
+body.pt-youtube .pt-navigation-page .pt-menu-form{margin:0}
+body.pt-term-manager-page .pt-term-wall{display:flex;columns:auto;flex-wrap:wrap;justify-content:center;align-content:center;gap:10px;min-height:calc(100dvh - 100px);box-sizing:border-box;padding:24px 12px}
+body.pt-term-manager-page .pt-term-tile{flex:0 1 240px;min-height:96px;margin:0;padding:20px;border-radius:20px;background:var(--pt-frame);font:500 16px/1.4 system-ui}
+body.pt-term-manager-page .pt-term-tile:hover{border-color:var(--pt-accent);background:#30291c}
+@media(max-width:600px){body.pt-youtube .pt-navigation-page{padding:0 0 24px!important;margin-top:12px!important}body.pt-youtube .pt-navigation-page #filters-flex{grid-template-columns:1fr}body.pt-youtube .pt-navigation-page .quiet-menu-panel{grid-template-columns:repeat(2,minmax(0,1fr))}body.pt-youtube .pt-navigation-page .pt-menu-item{min-height:92px;padding:12px!important;font-size:13px!important}body.pt-term-manager-page .pt-term-wall{min-height:calc(100dvh - 150px)}body.pt-term-manager-page .pt-term-tile{flex-basis:calc(50% - 5px);min-width:0;font-size:14px;padding:14px}}
+body.pt-youtube .pt-navigation-page .filter-column{width:100%!important;max-width:none!important}
+/* Account actions are compact icon controls; preferences live on the same page. */
+body.pt-youtube .pt-account-page{max-width:1160px}
+body.pt-youtube .pt-account-page .quiet-menu-panel{display:flex!important;flex-wrap:wrap;justify-content:center;align-items:start;gap:16px;margin:8px auto 28px}
+body.pt-youtube .pt-account-page .pt-menu-note{flex-basis:100%;padding:0;text-align:center}
+body.pt-youtube .pt-account-page .pt-menu-item{display:flex!important;flex-direction:column;gap:10px;min-height:0;width:120px;padding:10px!important;background:transparent!important;border:0!important;border-radius:16px!important;font:12px/1.4 system-ui!important}
+body.pt-youtube .pt-account-page .pt-menu-item::before{content:'';display:block;width:28px;height:28px;padding:14px;box-sizing:content-box;background:var(--account-icon) center/28px no-repeat #242522;border:1px solid #44453f;border-radius:50%}
+body.pt-youtube .pt-account-page .pt-menu-item:hover,body.pt-youtube .pt-account-page .pt-menu-item:focus-visible{background:transparent!important;outline:none}
+body.pt-youtube .pt-account-page .pt-menu-item:hover::before,body.pt-youtube .pt-account-page .pt-menu-item:focus-visible::before{border-color:var(--pt-accent);box-shadow:0 0 0 1px var(--pt-accent)}
+body.pt-youtube .pt-account-page .pt-menu-item input{font:inherit}
+body.pt-youtube .pt-account-page .pt-menu-item#toggle_theme>i{display:none}
+body.pt-youtube .pt-account-page .pt-account-session{border:0!important;padding:0!important}
+body.pt-youtube .pt-account-page input.pt-menu-item{height:108px;padding:76px 8px 10px!important;background:var(--account-icon) center 24px/28px no-repeat!important;cursor:pointer}
+.pt-account-preferences{width:100%;box-sizing:border-box}
+body.pt-youtube .pt-account-form>fieldset{display:flex;flex-direction:column;gap:12px;border:0;padding:0;min-width:0}
+.pt-account-group{background:var(--pt-frame);border-radius:20px;padding:22px;min-width:0}
+.pt-account-group h2{font:600 16px/1.4 system-ui;color:#eee;margin:0 0 18px}
+body.pt-youtube .pt-account-form .pure-control-group{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0;padding:12px 0;border-top:1px solid #ffffff0b;min-width:0;font:13px/1.5 system-ui;color:#ddd}
+body.pt-youtube .pt-account-form .pure-control-group>label{width:auto;flex:1 1 320px;max-width:100%;margin:0;text-align:left;font:inherit}
+body.pt-youtube .pt-account-form select,body.pt-youtube .pt-account-form input:not([type=checkbox]):not([type=hidden]):not([type=range]){width:220px;max-width:100%;box-sizing:border-box;background:#191a18;color:#eee;border:1px solid #47483f;border-radius:18px;padding:8px 12px;font:13px system-ui}
+body.pt-youtube .pt-account-form input[type=checkbox]{accent-color:var(--pt-accent);width:18px;height:18px;margin:0 4px;cursor:pointer}
+body.pt-youtube .pt-account-form input[type=range]{accent-color:var(--pt-accent);max-width:100%}
+body.pt-youtube .pt-account-form .pure-g{display:flex;flex-wrap:wrap;gap:8px;max-width:100%}
+body.pt-youtube .pt-account-form .preference-description{flex-basis:100%;font-size:12px;color:#aaa}
+body.pt-youtube .pt-account-form .pure-controls{margin:6px 0 20px;text-align:center}
+body.pt-youtube .pt-account-form button[type=submit]{background:var(--pt-accent)!important;color:#17140e!important;border:0;border-radius:24px;padding:12px 24px;font:600 14px system-ui}
+body.pt-youtube .pt-account-form :focus-visible{outline:2px solid var(--pt-accent);outline-offset:3px}
+@media(max-width:600px){.pt-account-group{padding:16px}body.pt-youtube .pt-account-form .pure-control-group>label{flex-basis:65%}body.pt-youtube .pt-account-form select{width:100%}body.pt-youtube .pt-account-page .quiet-menu-panel{gap:4px}body.pt-youtube .pt-account-page .pt-menu-item{width:100px}}
+/* Shape distinguishes playlists, search groups, and individual terms. */
+body.pt-youtube #pt-list-pills .pt-interest-chip{border-radius:0!important;background:transparent}
+body.pt-youtube #pt-list-pills .pt-interest-chip[aria-pressed=true]{background:transparent;border-color:var(--pt-accent)}
+body.pt-youtube #pt-term-list-pills .pt-interest-chip,body.pt-youtube #interest-suggestions [data-term-list-id]{border-radius:7px!important}
+body.pt-term-manager-page .pt-term-tile{border-radius:999px!important}
+body.pt-youtube #interest-suggestions .pt-interest-chip:not([data-term-list-id]){border-radius:999px!important}
+/* Text-sized terms wrap into a compact, centered brick pattern. */
+body.pt-term-manager-page .pt-term-wall{max-width:760px;width:100%;margin:0 auto;gap:6px;align-items:center;padding:24px 12px}
+body.pt-term-manager-page .pt-term-tile{flex:0 1 auto;width:max-content;max-width:100%;min-width:0;min-height:0;margin:0;padding:8px 14px;font:500 15px/1.35 system-ui;overflow-wrap:anywhere}
+/* Search Groups now sits beside its feed, outside the right navigation. */
+body.pt-youtube .pt-header>.pt-terms{display:flex!important;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;padding:0!important;border:1px solid #3b3b3b;border-radius:50%!important;background:#202020;color:#fff!important;cursor:pointer}
+body.pt-youtube .pt-header>.pt-terms:is(:hover,:focus-visible){border-color:var(--pt-accent)!important;outline:2px solid var(--pt-accent);outline-offset:0}
+body.pt-youtube .pt-header>.pt-terms[aria-current=page]{color:#17140e!important}
+#pt-term-manager{position:relative}
+.pt-term-connectors{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pt-term-connector{position:absolute;height:2px;background:radial-gradient(circle,#71634b 1px,transparent 1.2px) left center/7px 2px repeat-x;opacity:.65}
+body.pt-youtube .pt-header .pt-nav>.pt-active-playlist{display:flex!important;align-items:center;flex:0 1 auto;max-width:160px;min-width:0;height:28px;box-sizing:border-box;padding:0 10px!important;border:1px solid #3b3b3b!important;border-radius:0!important;background:#191919!important;color:#929292!important;cursor:default;font:500 12px/1.2 system-ui!important;text-decoration:none!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.pt-youtube .pt-header .pt-active-playlist:hover{outline:none}
+@media(max-width:600px){body.pt-youtube .pt-header .pt-nav>.pt-active-playlist{max-width:110px}}
+/* Reserve the playlist label's natural width in the shared header. */
+body.pt-youtube .pt-header .pt-nav{width:max-content!important;min-width:max-content;flex-shrink:0!important}
+body.pt-youtube .pt-header .pt-nav>.pt-active-playlist{display:block!important;flex:0 0 auto;width:auto!important;line-height:26px!important}
+body.pt-youtube .pt-header{letter-spacing:normal!important}
+/* Channel navigation replaces suggestions in the shared top bar. */
+body.pt-channel-page .pt-header>.pt-interest-bar{display:none!important}
+body.pt-channel-page .pt-header>.pt-channel-bar{flex:1 1 0;min-width:0;margin:0;position:static;gap:0}
+body.pt-channel-page .pt-header .pt-channel-bar :is(.pt-channel-tabs,.pt-channel-sorts){padding:0;gap:5px}
+body.pt-channel-page .pt-header .pt-search,body.pt-channel-page .pt-header.pt-interest-header .pt-search input[name=q]{background:var(--pt-accent)!important;color:#211b10!important;border-radius:999px}
+body.pt-channel-page .pt-header .pt-search input[name=q]::placeholder{color:#211b10!important;opacity:1}
+body.pt-channel-page .pt-channel-hero{margin-bottom:8px}
+@media(max-width:1100px){body.pt-channel-page .pt-header.pt-interest-header{flex-wrap:wrap!important}body.pt-channel-page .pt-header>.pt-channel-bar{order:3;flex-basis:100%}}
+@media(max-width:700px){body.pt-channel-page .pt-header .pt-channel-bar :is(.pt-channel-tabs,.pt-channel-sorts){flex-direction:row}body.pt-channel-page .pt-header .pt-channel-bar :is(a,b){width:auto}body.pt-channel-page .pt-header .pt-channel-bar>nav::before,body.pt-channel-page .pt-header .pt-channel-bar>nav::after{width:auto;flex:1 1 0}}
+/* Two option anchors separated by three equal dotted spaces. */
+body.pt-channel-page .pt-header>.pt-channel-bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:8px;background:radial-gradient(circle,#71634b 1px,transparent 1.2px) left center/7px 2px repeat-x}
+body.pt-channel-page .pt-header .pt-channel-bar>.pt-channel-tabs{grid-column:2}
+body.pt-channel-page .pt-header .pt-channel-bar>.pt-channel-sorts{grid-column:4}
+body.pt-channel-page .pt-header .pt-channel-bar>nav{background:var(--pt-bg,#111);box-shadow:0 0 0 8px var(--pt-bg,#111)}
+body.pt-channel-page .pt-header .pt-channel-bar>nav::before,body.pt-channel-page .pt-header .pt-channel-bar>nav::after{display:none}

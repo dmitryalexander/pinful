@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script src="/static/app-data.js?v=1"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ if ne .Query "" }}{{ .Query }} - Pinful{{ else }}Pinful{{ end }}</title>
+    <meta property="og:title" content="{{ if ne .Query "" }}{{ .Query }} - Pinful{{ else }}Pinful{{ end }}">
+    <meta property="og:description" content="{{ if ne .Query "" }}Search results for {{ .Query }} on Pinful{{ else }}Pinful - A privacy-focused frontend for Pinterest{{ end }}">
+    <meta property="og:url" content="{{ if ne .Query "" }}/search/pins/?q={{ .Query | urlquery }}{{ else }}/{{ end }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Pinful">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%221em%22 font-size=%2280%22>📌</text></svg>">
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            scrollbar-color: gray #121212;
+        }
+
+        .grid-container {
+            columns: 5 200px;
+            column-gap: 1.5rem;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .grid-container div {
+            width: 150px;
+            margin: 0 1.5rem 1.5rem 0;
+            display: inline-block;
+            width: 100%;
+            padding: 5px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .grid-container div img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            display: block;
+            object-fit: contain;
+        }
+
+        input#search {
+            all: unset;
+            background: #222;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            border-radius: 24px;
+            width: 100%;
+        }
+
+        input#search:-webkit-autofill,
+        input#search:-webkit-autofill:hover,
+        input#search:-webkit-autofill:focus,
+        input#search:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #222 inset !important;
+            -webkit-text-fill-color: #fff !important;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100vw;
+            gap: 1rem;
+            width: 90%;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+
+        .search {
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            display: flex;
+        }
+
+        button[type="submit"] {
+            all: unset;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 30px;
+            width: 30px;
+            color: #e60023;
+            background-color: #222;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-full {
+            display: inline;
+        }
+        .logo-short {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .logo-full {
+                display: none;
+            }
+            .logo-short {
+                display: inline;
+            }
+            .grid-container {
+                columns: 2;
+                width: 100%;
+                column-gap: 0.5rem;
+            }
+            .grid-container div {
+                margin: 0 0 0.5rem 0;
+                padding: 2px;
+            }
+        }
+
+        .pagination-container a {
+            color: #fff;
+        }
+    </style>
+    <script defer src="/static/player.js?v=blue-default1"></script><script defer src="/static/media-shortcuts.js?v=hover-keys1"></script>
+<link rel="stylesheet" href="/static/wall.css?v=pinless-fix1">
+<script defer src="/static/pin-recovery.js?v=pin-recovery1"></script><script defer src="/static/wall-scroll.js?v=pin-errors1"></script>
+<link rel="stylesheet" href="/static/player.css?v=savedgreen1"><link rel="stylesheet" href="/static/discovery.css?v=feed1"><link rel="stylesheet" href="/static/interest-bar.css?v=spaced-dots1"><script defer src="/static/loading-warning.js?v=creator4"></script><script defer src="/static/discovery.js?v=pinful-name1"></script><link rel="stylesheet" href="/static/modern-terms.css?v=20261008"><link rel="stylesheet" href="/static/modern.css?v=hidden1"><script defer src="/static/modern.js?v=blue-default1"></script><script defer src="/static/search-tags.js?v=tags3"></script><script defer src="/static/search-groups.js?v=groups4"></script><script defer src="/static/history-guide.js?v=history5"></script><script defer src="/static/favorites-guide.js?v=fav4"></script><script defer src="/static/feed-guide.js?v=pinful-name1"></script><script defer src="/static/hidden-guide.js?v=hidden2"></script><script defer src="/static/interest-bar.js?v=feed-left1"></script><link rel="stylesheet" href="/static/creator.css?v=pinterms1"><script defer src="/static/creator.js?v=pinterms1"></script><link rel="stylesheet" href="/static/pinterest-session.css?v=session1"><script defer src="/static/pinterest-session.js?v=session-retry1"></script></head>
+
+<body>
+    <div class="search-container">
+        <h1><a href="/"><span class="logo-short">P</span><span class="logo-full">Pinful</span></a></h1>
+        <form action="/search/pins/" method="GET" class="search">
+            <input id="search" type="text" name="q" placeholder="Search, or paste a Pinterest pin link"
+                value="{{.Query}}" required />
+            <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-search">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg></button>
+        </form>
+    </div>
+
+    <div class="grid-container">
+        {{range .Results}}
+        <div>
+            {{if .VideoURL}}
+<video controls playsinline preload="none" poster="{{.Image}}" src="{{.VideoURL}}" style="width:100%;height:auto;border-radius:16px;display:block" aria-label="Pin video"></video>
+<a href="/pin/{{.ID}}?wall_context={{ $.WallContext }}">Open pin</a>
+{{else}}
+<a href="/pin/{{.ID}}?q={{ $.Query | urlquery }}&wall_context={{ $.WallContext }}">
+                <img loading="lazy" decoding="async" src="{{.Image}}" width="{{.ImageWidth}}" height="{{.ImageHeight}}" alt="Image" />
+            </a>
+{{end}}
+        </div>
+        {{end}}
+    </div>
+
+    {{ if .Bookmark }}
+    <div class="pagination-container">
+        <h2 style="text-align: center;">
+            <a href="/search/pins/?q={{ .Query | urlquery }}&next&cursor={{ .Bookmark | urlquery }}">Next page</a>
+        </h2>
+    </div>
+    {{ end }}
+</body>
+
+</html>

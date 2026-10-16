@@ -1,0 +1,9 @@
+{
+  "name": "pinful",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "A customized Pinless fork for visual discovery and collections",
+  "license": "AGPL-3.0",
+  "scripts": { "test": "node scripts/check.cjs" },
+  "engines": { "node": ">=20" }
+}

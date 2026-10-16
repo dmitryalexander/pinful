@@ -1,0 +1,27 @@
+/* The opened pin occupies two left-hand columns of the same masonry wall. */
+body.pin-detail-page{padding:0!important}
+.pin-detail-page .related-section{box-sizing:border-box;width:100%;margin:0;padding:0 8px;max-width:none}
+.pin-detail-wall:not(.wall-ready){display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:4px;columns:auto}
+.pin-detail-wall .pin-featured{position:relative;min-width:0;grid-column:span 2;margin:0;padding:0;overflow:hidden}
+.pin-detail-wall .pin-container{max-width:none;width:100%;margin:0;border-radius:0;background:transparent}
+.pin-detail-wall .pin-container img,.pin-detail-wall .pin-container video{width:100%;height:auto;max-height:none;object-fit:contain;border-radius:0}
+.pin-detail-wall .pin-info{padding:10px 12px;background:#1e1e1e;overflow-wrap:anywhere}
+.pin-detail-wall .pin-title{font-size:18px;margin-bottom:6px}
+.pin-detail-wall .pin-description{font-size:13px;line-height:1.4;margin-bottom:6px}
+.pin-detail-wall .pin-pinner{font-size:13px}
+.pin-detail-wall .pin-back{position:absolute;top:10px;left:10px;z-index:8;display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#171717e8;color:#fff;font:28px/1 system-ui;text-decoration:none;box-shadow:0 1px 5px #0005}
+.pin-detail-wall .pin-back:hover{background:#333}
+.pin-detail-wall .pin-back:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+@media(max-width:475px){.pin-detail-wall .pin-featured{grid-column:span 1}}
+.pin-detail-wall .pin-creator-strip{display:flex;align-items:center;gap:8px;padding:8px 10px;min-height:38px;box-sizing:border-box;background:#222;color:#eee;font:13px/1.3 system-ui}
+.pin-creator-strip .pin-credit-label{color:#aaa;font-size:11px;flex-shrink:0}
+.pin-creator-strip a{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pin-creator-strip a:hover{text-decoration:underline}
+.pin-detail-page .pin-compact-notice{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:10px 16px;margin:0 auto 12px;font:13px/1.5 system-ui;color:#b9bbb2}
+.pin-compact-notice p{margin:0}
+.pin-compact-notice .pin-retry{padding:5px 14px}
+.pin-detail-wall[data-single-pin="true"]{max-width:720px;margin:0 auto}
+.pin-detail-wall[data-single-pin="true"] .pin-featured{width:100%!important;left:0!important}
+
+.pin-detail-wall[data-lens-page]:not([data-previous-wall]) .pin-featured{grid-column:span 1}
+.pin-detail-wall[data-lens-page]:not(.wall-ready){grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
