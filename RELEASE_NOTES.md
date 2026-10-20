@@ -33,3 +33,8 @@ are mocked on installed apps. No real reset/import is part of the upgrade.
 External Pinterest/YouTube availability and expired credentials remain outside
 this application's control. This was a targeted review of custom code and build
 configuration, not an audit of every upstream dependency.
+
+Cache audit follow-up: Back/Forward restored pages recheck saved-data revisions and
+reset epochs while preserving pending edits.
+Every template now uses a content-derived interface asset version. HTML/data
+responses are no-store; interface files revalidate while media keeps its own policy.

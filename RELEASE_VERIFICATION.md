@@ -23,3 +23,6 @@
 These checks were completed before publication; published commits are recorded in Git history. External service availability and the
 validity of an owner's live Pinterest/YouTube credential are not guaranteed by
 synthetic tests. This is a targeted review of the custom code and release setup.
+
+Cache audit: targeted mixed-asset, player/style/art refresh, unavailable-storage,
+Back/Forward saved-data/epoch and pending-edit preservation regressions passed.

@@ -122,6 +122,7 @@ func main() {
 	gin.DefaultErrorWriter = io.Discard
 
 	router := gin.Default()
+	router.Use(interfaceCachePolicy())
 	router.Use(func(c *gin.Context) {
 		if !localPinterestHost(c.Request.Host) {
 			c.AbortWithStatus(http.StatusForbidden)
@@ -176,7 +177,7 @@ func main() {
 	router.StaticFS("/static", http.FS(staticSubFS))
 
 	// Load embedded templates
-	tmpl := template.Must(template.ParseFS(templatesFS, "templates/*"))
+	tmpl := template.Must(loadInterfaceTemplates(templatesFS, staticFS))
 	router.SetHTMLTemplate(tmpl)
 
 	router.GET("/", func(c *gin.Context) {

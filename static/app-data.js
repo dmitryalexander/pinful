@@ -142,10 +142,12 @@
   };
   addEventListener('pagehide', () => { if (timer && !suspended) flush(); });
   addEventListener('storage', event => { if (event.key === EPOCH && event.newValue !== epoch) stale(); });
-  addEventListener('focus', async () => {
+  async function checkSavedState() {
     if (suspended) return;
     try { const response = await fetch(ENDPOINT, {cache: 'no-store'}); if (response.ok) { const current = await response.json(); if ((current.epoch || '') !== epoch) stale(); else if (!Object.keys(readPending()).length && JSON.stringify(current.revisions || {}) !== JSON.stringify(revisions)) stale(); } } catch {}
-  });
+  }
+  addEventListener('focus', checkSavedState);
+  addEventListener('pageshow', event => { if (event.persisted) checkSavedState(); });
   if (BROWSER_KEYS.length && window.fetch && typeof document !== 'undefined') {
     const originalFetch = window.fetch;
     window.fetch = function(input, init = {}) {
