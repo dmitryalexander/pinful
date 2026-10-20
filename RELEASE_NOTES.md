@@ -38,3 +38,6 @@ Cache audit follow-up: Back/Forward restored pages recheck saved-data revisions 
 reset epochs while preserving pending edits.
 Every template now uses a content-derived interface asset version. HTML/data
 responses are no-store; interface files revalidate while media keeps its own policy.
+
+Menu tutorials: compact uppercase action headings sit beside amber input caps.
+Mouse actions use matching CLICK badges; explanatory text remains below.
