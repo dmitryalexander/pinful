@@ -122,6 +122,8 @@ func downloadVideoHandler(c *gin.Context) {
 	}
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Minute)
 	defer cancel()
+	downloadFilesMu.RLock()
+	defer downloadFilesMu.RUnlock()
 	dir, err := os.MkdirTemp(downloadRoot, "job-")
 	if err != nil {
 		c.String(500, "There is not enough temporary storage to prepare this video.")

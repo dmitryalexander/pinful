@@ -5,6 +5,29 @@
   window.appDataControlsVersion = 2;
 
   const el = (tag, text, cls) => { const node = document.createElement(tag); if (text) node.textContent = text; if (cls) node.className = cls; return node; };
+
+  // Explicit allowlists: never treat saved information or synchronization state as cache.
+  function temporaryEntries() {
+    const result = [];
+    const local = APP === 'individuous' ? /^(?:pt-shapes|pt-channel-avatar:UC[\w-]{22})$/ : /^$/;
+    const session = APP === 'individuous' ? /^(?:pt-sandbox-wall-v1|pt-sandbox-search-v2)$/ : /^(?:pinless-wall-snapshot-v1|pinless-open-pin-preview-v1)$/;
+    for (const [storage, pattern] of [[window.localStorage,local],[window.sessionStorage,session]]) {
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (pattern.test(key)) result.push({storage,key,bytes:2*(key.length+(storage.getItem(key)||'').length)});
+      }
+    }
+    return result;
+  }
+  window.appTemporaryStorage = {
+    measure: () => temporaryEntries().reduce((total,entry) => total + entry.bytes,0),
+    clear: () => { for (const {storage,key} of temporaryEntries()) storage.removeItem(key); }
+  };
+  function storageSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    return bytes < 1024*1024 ? (bytes/1024).toFixed(1)+' KiB' : (bytes/1024/1024).toFixed(1)+' MiB';
+  }
+
   async function request(url, body = {}) {
     const response = await fetch(url, {method: 'POST', credentials: 'same-origin', cache: 'no-store',
       headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
@@ -149,6 +172,25 @@
       status.textContent = 'Everything cleared. Opening a fresh app…';
       location.assign(APP === 'pinful' ? '/' : '/star.html');
     });
+    const temporary = el('section','','app-data-controls app-temporary-storage');
+    temporary.append(el('h2','Temporary storage'),el('p','Clear reusable app data without removing collections, search groups, follows, history, settings or login hashes. Cached details may load again. Restore Feed data in this tab will be cleared.'));
+    const usage = el('p'), tempStatus = el('p'); tempStatus.setAttribute('role','status');
+    const tempActions = el('div','','app-data-actions'), refresh = el('button','Refresh storage usage'), clearTemp = el('button','Clear temporary data');
+    refresh.type = clearTemp.type = 'button'; tempActions.append(refresh,clearTemp); temporary.append(usage,tempActions,tempStatus);
+    temporary.append(el('p','Browser image/video cache and downloaded files in your Downloads folder are not included. Manage those in your browser or file manager. Browser data below covers this browser and this tab’s Restore Feed; other tabs may keep their own copy.'));
+    section.after(temporary); controls.push(refresh,clearTemp);
+    async function storageInfo(clear = false) {
+      const result = await request('/app-data/temporary',{clear,epoch:sync().epoch});
+      if (clear) window.appTemporaryStorage.clear();
+      usage.textContent = 'Reusable browser data: approximately '+storageSize(window.appTemporaryStorage.measure())+' · '+result.label+': '+storageSize(result.bytes)+(result.count === undefined ? '' : ' ('+result.count+' videos)')+(result.activeDownloads ? ' · '+result.activeDownloads+' active downloads' : '');
+      tempStatus.textContent = (clear ? 'Temporary app data cleared. ' : '')+(result.note||'');
+    }
+    refresh.onclick = () => run(tempStatus,() => storageInfo());
+    clearTemp.onclick = () => run(tempStatus,async () => {
+      if (!await confirmation('Clear temporary data?','This clears reusable app cache and this tab’s Restore Feed. Saved information and login hashes stay as they are.',false,'Clear temporary data')) { tempStatus.textContent = 'Cleanup cancelled.'; return; }
+      await storageInfo(true);
+    });
+    void run(tempStatus,() => storageInfo());
     return true;
   }
   function showIssue() {

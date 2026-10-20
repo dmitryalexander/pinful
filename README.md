@@ -117,3 +117,10 @@ Source-wall navigation contexts hold the 256 most recent snapshots in server mem
 Automatic daily copies keep the latest 14 days. First-sync copies keep at most
 20 files, 128 MiB total, and 30 days of history (always retaining the newest copy).
 These are recovery aids; use Export info and Save hash for your own backups.
+
+Menu’s **Temporary storage** shows reusable browser data and app cache usage.
+**Clear temporary data** removes only recreatable cache and this tab’s Restore
+Feed snapshot. Collections, follows, history, settings, login hashes and recovery
+backups are preserved. Browser-managed HTTP media cache and saved downloads
+are not included. Browser byte counts estimate UTF-16 storage. Temporary download files are
+removed after each download and at startup; cleanup waits for active downloads.

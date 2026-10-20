@@ -91,6 +91,10 @@ func newAppDataStore(dir string) *appDataStore {
 func (s *appDataStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
+	if r.URL.Path == "/app-data/temporary" {
+		temporaryStorage(w, r)
+		return
+	}
 	if r.URL.Path == "/app-data/recovery" || r.URL.Path == "/app-data/recover" {
 		s.recovery(w, r)
 		return
