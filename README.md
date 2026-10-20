@@ -124,3 +124,13 @@ Feed snapshot. Collections, follows, history, settings, login hashes and recover
 backups are preserved. Browser-managed HTTP media cache and saved downloads
 are not included. Browser byte counts estimate UTF-16 storage. Temporary download files are
 removed after each download and at startup; cleanup waits for active downloads.
+
+Optional **Automatically clear temporary data daily** runs when the app is open,
+at most once per 24 hours in each browser. It preserves the current tab’s Restore
+Feed and all saved information/login hashes. The preference is saved with app
+settings; failed cleanup is retried on a later check rather than marked complete.
+
+Empty playlists, History, Hidden pins, search-group feeds, Restore walls, searches,
+profiles, boards and unavailable pin pages have contextual avatar introductions.
+They disappear once content loads, retain source errors/retry controls, and reuse
+the owner’s avatar artwork from Individuous. Populated pages stay unchanged.

@@ -21,8 +21,24 @@
   }
   window.appTemporaryStorage = {
     measure: () => temporaryEntries().reduce((total,entry) => total + entry.bytes,0),
-    clear: () => { for (const {storage,key} of temporaryEntries()) storage.removeItem(key); }
+    clear: ({includeRestore = true} = {}) => { for (const {storage,key} of temporaryEntries()) if (includeRestore || storage !== window.sessionStorage) storage.removeItem(key); }
   };
+  const AUTO_CLEANUP = 'pinless-auto-cleanup', AUTO_LAST = APP + '-auto-cleanup-last';
+  let automaticWork;
+  async function automaticCleanup() {
+    if (automaticWork) return automaticWork;
+    if (window.localStorage.getItem(AUTO_CLEANUP) !== 'daily') return;
+    const last = Number(window.localStorage.getItem(AUTO_LAST)) || 0;
+    if (Date.now() - last < 86400000) return;
+    automaticWork = (async () => {
+      await request('/app-data/temporary',{clear:true,epoch:window.appData?.epoch || ''});
+      // Automatic cleanup keeps the current tab's Restore Feed and active media.
+      window.appTemporaryStorage.clear({includeRestore:false});
+      window.localStorage.setItem(AUTO_LAST,String(Date.now()));
+    })();
+    try { await automaticWork; } finally { automaticWork = null; }
+  }
+  window.appTemporaryStorage.automaticCleanup = automaticCleanup;
   function storageSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     return bytes < 1024*1024 ? (bytes/1024).toFixed(1)+' KiB' : (bytes/1024/1024).toFixed(1)+' MiB';
@@ -177,8 +193,19 @@
     const usage = el('p'), tempStatus = el('p'); tempStatus.setAttribute('role','status');
     const tempActions = el('div','','app-data-actions'), refresh = el('button','Refresh storage usage'), clearTemp = el('button','Clear temporary data');
     refresh.type = clearTemp.type = 'button'; tempActions.append(refresh,clearTemp); temporary.append(usage,tempActions,tempStatus);
-    temporary.append(el('p','Browser image/video cache and downloaded files in your Downloads folder are not included. Manage those in your browser or file manager. Browser data below covers this browser and this tab’s Restore Feed; other tabs may keep their own copy.'));
+    temporary.append(el('p','Browser image/video cache and downloaded files in your Downloads folder are not included. Manage those in your browser or file manager. Browser usage shown covers this browser and this tab’s Restore Feed; other tabs may keep their own copy.'));
     section.after(temporary); controls.push(refresh,clearTemp);
+    const autoLabel = el('label'), autoClear = el('input'); autoClear.type = 'checkbox';
+    autoClear.checked = window.localStorage.getItem(AUTO_CLEANUP) === 'daily';
+    autoLabel.append(autoClear,' Automatically clear temporary data daily');
+    temporary.append(autoLabel,el('p','Runs when the app is open, at most once a day in this browser. Keeps your current Restore Feed, saved information and login hashes. Active downloads are left alone.'));
+    controls.push(autoClear);
+    autoClear.onchange = () => run(tempStatus,async () => {
+      window.localStorage.setItem(AUTO_CLEANUP,autoClear.checked ? 'daily' : 'off');
+      if (autoClear.checked) await automaticCleanup();
+      await storageInfo();
+      tempStatus.textContent = autoClear.checked ? 'Daily cleanup is on. Your current Restore Feed is kept.' : 'Automatic cleanup is off.';
+    });
     async function storageInfo(clear = false) {
       const result = await request('/app-data/temporary',{clear,epoch:sync().epoch});
       if (clear) window.appTemporaryStorage.clear();
@@ -213,7 +240,9 @@
     document.body.append(banner);
   }
   setInterval(showIssue, 500);
+  setInterval(() => { void automaticCleanup().catch(() => {}); },3600000);
   function start() {
+    void automaticCleanup().catch(() => {});
     showIssue();
     if (mount()) return;
     const observer = new MutationObserver(() => { if (mount()) observer.disconnect(); });

@@ -1,0 +1,10 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+function fixture(url){const elements=new Map();let content=false,loading=false;
+ function node(){const n={children:[],dataset:{},append(...items){n.children.push(...items)},setAttribute(){},before(child){elements.set(child.id,child)},remove(){elements.delete(n.id)}};return n;}
+ const wall=node();wall.querySelectorAll=()=>content?[{closest:()=>null}]:[];wall.getAttribute=()=>loading?'true':null;
+ const document={readyState:'loading',addEventListener(){},getElementById:id=>elements.get(id),createElement:node,querySelector:selector=>selector.includes('.grid-container')?wall:null};
+ const location=new URL('http://localhost'+url),window={};vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../static/empty-tutorial.js'),'utf8'),{document,window,location,URLSearchParams});
+ return {api:window.pinfulEmptyGuides,get guide(){return elements.get('pn-empty-guide')},set populated(v){content=v},set loading(v){loading=v}};
+}
+for(const kind of ['lists','history','hidden','discover','restore'])test(kind+' introduction is empty-only and returns after content is removed',()=>{const f=fixture('/?pt_page='+kind);f.api.sync();assert.equal(f.guide.dataset.kind,kind);assert(f.guide.children[0].src.startsWith('/static/tutorial-'));const original=f.guide;f.api.sync();assert.equal(f.guide,original);f.populated=true;f.api.sync();assert.equal(f.guide,undefined);f.populated=false;f.loading=true;f.api.sync();assert.equal(f.guide,undefined);f.loading=false;f.api.sync();assert(f.guide);});
+test('routes use matching copy and Menu/docs never get empty guides',()=>{const f=fixture('/?pt_page=menu'),choose=f.api.chooseKind;f.api.sync();assert.equal(f.guide,undefined);assert.equal(choose('/search/pins/','',false,false),'search');assert.equal(choose('/person/','',true,false),'profile');assert.equal(choose('/person/board/','',false,true),'board');assert.equal(choose('/pin/123/','',false,false),'pin');assert.equal(choose('/about','',false,false),null);});
