@@ -181,6 +181,22 @@
     ring.setAttribute('aria-label', mode === 'wait' ? 'Waiting to preview' : 'Loading video');
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) hovering?.stop(); });
+  function mediaUnavailable(tile, media) {
+    if (tile.querySelector('.pin-media-unavailable')) return;
+    tile.classList.add('has-media-error');
+    const width = Number(media.getAttribute('width')), height = Number(media.getAttribute('height'));
+    tile.style.aspectRatio = width > 0 && height > 0 ? `${width} / ${height}` : '1';
+    const message = document.createElement('div');
+    message.className = 'pin-media-unavailable'; message.setAttribute('role', 'status');
+    message.setAttribute('aria-label', '404 — Pin media unavailable');
+    const art = document.createElement('img'); art.src = '/static/warning.png'; art.alt = '';
+    const code = document.createElement('strong'); code.textContent = '404';
+    message.append(art, code); tile.append(message);
+  }
+  function clearMediaError(tile) {
+    tile.classList.remove('has-media-error'); tile.style.removeProperty('aspect-ratio');
+    tile.querySelector('.pin-media-unavailable')?.remove();
+  }
   function initialize(root) { root.querySelectorAll('video').forEach(video => {
     if (video.dataset.hlsReady) return;
     const source = video.getAttribute('src');
@@ -291,6 +307,7 @@
       }
     }
     video.addEventListener('playing', () => {
+      clearMediaError(tile);
       if (previewing) { loader(tile, null); tile.classList.add('is-previewing'); }
     });
     video.addEventListener('waiting', () => { if (previewing) loader(tile, 'load'); });
@@ -316,6 +333,7 @@
       tile.classList.remove('is-loading');
       tile.classList.remove('is-playing');
       icon(button, 'play', 'Retry video');
+      mediaUnavailable(tile, video);
       notify(message);
     };
     const play = async () => {
@@ -337,6 +355,7 @@
     };
     button.addEventListener('click', async () => {
       if (starting) return;
+      clearMediaError(tile);
       starting = true;
       button.disabled = true;
       // A running preview becomes the real thing: sound on, from the start.
@@ -380,6 +399,9 @@
       const content = link || img;
       content.before(tile);
       tile.append(content);
+      img.addEventListener('error', () => mediaUnavailable(tile, img));
+      img.addEventListener('load', () => clearMediaError(tile));
+      if (img.complete && !img.naturalWidth) mediaUnavailable(tile, img);
       if (link) {
         link.classList.add('pin-image-link');
         link.title = 'Open pin · O';

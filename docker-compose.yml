@@ -1,17 +1,14 @@
-name: pinful
+name: ${COMPOSE_PROJECT_NAME:-pinful}
 services:
   pinful:
-    container_name: pinful
-    image: pinful:local
-    build: .
-    ports:
-      - "127.0.0.1:${PINFUL_PORT:-${PINFULL_PORT:-3002}}:3000"
+    image: ${COMPOSE_PROJECT_NAME:-pinful}:local
+    build: ${PINFUL_SOURCE:-.}
+    ports: ["127.0.0.1:${PINFUL_PORT:-3001}:3000"]
     environment:
       PINLESS_DATA: /data
-    volumes:
-      - pinful-data:/data
+    volumes: [pinful-data:/data]
     restart: unless-stopped
 volumes:
   pinful-data:
-    # Preserve the existing standalone installation's data across the rename.
-    name: pinfull_pinfull-data
+    external: ${PINFUL_EXTERNAL_DATA:-false}
+    name: ${PINFUL_DATA_VOLUME:-${COMPOSE_PROJECT_NAME:-pinful}_data}

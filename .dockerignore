@@ -6,3 +6,6 @@
 !static/**
 !templates/
 !templates/**
+
+pinterest-session.json
+.pinterest-session-*

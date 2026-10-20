@@ -1,3 +1,5 @@
+Historical initial-upload checklist; current consolidated-release results are in ../RELEASE_NOTES.md and ../RELEASE_VERIFICATION.md.
+
 # Initial source commit readiness
 
 Pinful is an initial **development preview**, not a stable release or a universal Pinterest resolver. The final clean-export checks below passed for this initial source snapshot. Publishing a stable release remains a separate decision.

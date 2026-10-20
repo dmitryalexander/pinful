@@ -7,13 +7,17 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 )
 
 // This optional connection belongs to a local, single-user server. Credentials
-// never enter app-data, browser storage, response bodies, or persistent files.
+// never enter app-data or browser storage. Only an explicit same-origin export
+// returns them to the user for downloading. A private file in
+// the installation's data volume remembers the last verified connection.
 type pinterestCredentials struct {
 	Session string `json:"session"`
 	CSRF    string `json:"csrf"`
@@ -23,9 +27,66 @@ type pinterestSessionStore struct {
 	sync.RWMutex
 	credentials pinterestCredentials
 	generation  uint64
+	file        string
 }
 
 var pinterestSession pinterestSessionStore
+
+func (s *pinterestSessionStore) load(dir string) error {
+	s.file = filepath.Join(dir, "pinterest-session.json")
+	raw, err := os.ReadFile(s.file)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return errors.New("saved Pinterest connection unavailable")
+	}
+	var credentials pinterestCredentials
+	if json.Unmarshal(raw, &credentials) != nil || !validPinterestCookie(credentials.Session, true) || !validPinterestCookie(credentials.CSRF, false) {
+		return errors.New("saved Pinterest connection invalid")
+	}
+	s.credentials = credentials
+	return nil
+}
+
+// Caller holds the store lock. Atomic replacement never overwrites a good
+// saved connection with a partial write. This file is excluded from app backups.
+func (s *pinterestSessionStore) persist(credentials pinterestCredentials) error {
+	if s.file == "" {
+		return nil
+	}
+	if credentials.Session == "" {
+		err := os.Remove(s.file)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		return syncDirectory(filepath.Dir(s.file))
+	}
+	raw, err := json.Marshal(credentials)
+	if err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(filepath.Dir(s.file), ".pinterest-session-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+	if _, err = f.Write(raw); err != nil {
+		f.Close()
+		return err
+	}
+	if err = f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err = f.Close(); err != nil {
+		return err
+	}
+	return os.Rename(f.Name(), s.file)
+}
 
 func (s *pinterestSessionStore) snapshot() (pinterestCredentials, uint64) {
 	s.RLock()
@@ -131,6 +192,18 @@ func verifyPinterestSession(credentials pinterestCredentials) bool {
 	return result.Context.Authenticated && (len(result.Resource.Error) == 0 || string(result.Resource.Error) == "null")
 }
 
+func (s *pinterestSessionStore) checkStatus(w http.ResponseWriter) {
+	credentials, generation := s.snapshot()
+	verified := credentials.Session != "" && verifyPinterestSession(credentials)
+	s.RLock()
+	defer s.RUnlock()
+	if s.generation != generation {
+		appDataReply(w, http.StatusConflict, map[string]string{"message": "Connection changed. Check again."})
+		return
+	}
+	appDataReply(w, http.StatusOK, map[string]any{"connected": verified, "authenticated": verified, "has_session": credentials.Session != "", "recommendations": "unverified"})
+}
+
 func (s *pinterestSessionStore) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/json")
@@ -139,8 +212,7 @@ func (s *pinterestSessionStore) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if r.Method == http.MethodGet {
-		credentials, _ := s.snapshot()
-		appDataReply(w, http.StatusOK, map[string]any{"connected": credentials.Session != "", "recommendations": "unverified"})
+		s.checkStatus(w)
 		return
 	}
 	mediaType, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
@@ -154,15 +226,34 @@ func (s *pinterestSessionStore) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 	if r.Method == http.MethodDelete {
 		s.Lock()
+		if s.persist(pinterestCredentials{}) != nil {
+			s.Unlock()
+			appDataReply(w, http.StatusInternalServerError, map[string]string{"message": "Could not remove the saved connection. Try again."})
+			return
+		}
 		s.credentials = pinterestCredentials{}
 		s.generation++
 		s.Unlock()
-		appDataReply(w, http.StatusOK, map[string]bool{"connected": false})
+		appDataReply(w, http.StatusOK, map[string]bool{"connected": false, "authenticated": false, "has_session": false})
 		return
 	}
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "GET, POST, DELETE")
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if r.URL.Path == "/pinterest-session/check" {
+		s.checkStatus(w)
+		return
+	}
+	if r.URL.Path == "/pinterest-session/export" {
+		credentials, _ := s.snapshot()
+		if credentials.Session == "" {
+			appDataReply(w, http.StatusNotFound, map[string]string{"message": "No hash is saved."})
+			return
+		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		appDataReply(w, http.StatusOK, map[string]any{"format": "myapps-hash", "version": 1, "app": "pinful", "credentials": credentials})
 		return
 	}
 	var credentials pinterestCredentials
@@ -178,7 +269,8 @@ func (s *pinterestSessionStore) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 	_, generation := s.snapshot()
-	if !verifyPinterestSession(credentials) {
+	restoring := r.URL.Path == "/pinterest-session/restore"
+	if !restoring && !verifyPinterestSession(credentials) {
 		appDataReply(w, http.StatusUnauthorized, map[string]string{"message": "Pinterest did not confirm this session. Check the cookie values and try again. An existing connection is unchanged."})
 		return
 	}
@@ -189,7 +281,11 @@ func (s *pinterestSessionStore) ServeHTTP(w http.ResponseWriter, r *http.Request
 		appDataReply(w, http.StatusConflict, map[string]string{"message": "Connection changed. Try again."})
 		return
 	}
+	if s.persist(credentials) != nil {
+		appDataReply(w, http.StatusInternalServerError, map[string]string{"message": "Could not save the connection locally. Existing connection unchanged."})
+		return
+	}
 	s.credentials = credentials
 	s.generation++
-	appDataReply(w, http.StatusOK, map[string]any{"connected": true, "recommendations": "unverified"})
+	appDataReply(w, http.StatusOK, map[string]any{"connected": !restoring, "authenticated": !restoring, "has_session": true, "recommendations": "unverified"})
 }

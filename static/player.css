@@ -1,4 +1,10 @@
 body, input, button, select, textarea, .continuous-status, .continuous-status button { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+/* Keep failed media in its tile and show the same small cassette on images and videos. */
+.pin-video-tile.has-media-error{min-height:180px;background:#111}
+.pin-video-tile.has-media-error>.pin-image-link>img,.pin-video-tile.has-media-error>img,.pin-video-tile.has-media-error>video{visibility:hidden}
+.pin-video-tile .pin-media-unavailable{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:2}
+.pin-video-tile .pin-media-unavailable img{width:128px!important;height:128px!important;max-height:none!important;object-fit:contain;mix-blend-mode:screen;border-radius:0!important}
+.pin-media-unavailable strong{margin-top:-12px;color:#eee;font:800 28px/1.2 system-ui}
 .media-wall { gap:4px!important; }
 .media-wall > * { padding:0!important; border-radius:0!important; }
 .media-wall img,.media-wall video,.pin-container,.pin-container > img,.pin-video-tile video { border-radius:0!important; }

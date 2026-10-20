@@ -32,7 +32,7 @@ type SearchResult struct {
 
 type Pin struct {
 	pinOrigin
-	UpstreamID string `json:"-"`
+	UpstreamID  string `json:"-"`
 	VideoURL    string `json:"video_url,omitempty"`
 	ID          string `json:"id"`
 	ImageWidth  int    `json:"width"`
@@ -139,12 +139,15 @@ func main() {
 
 	// Playlists, history, follows and search groups are also saved on the server (appdata.go).
 	// Handled before routing so it never clashes with the /:username/:slug routes.
+	if err := pinterestSession.load(appDataDir()); err != nil {
+		fmt.Fprintln(os.Stderr, "Saved Pinterest connection unavailable; reconnect in Menu.")
+	}
 	appData := newAppDataStore(appDataDir())
 	if appData.err != nil {
 		fmt.Fprintln(os.Stderr, "App data storage unavailable:", appData.err)
 	}
 	router.Use(func(c *gin.Context) {
-		if c.Request.URL.Path == "/app-data/items" {
+		if strings.HasPrefix(c.Request.URL.Path, "/app-data/") {
 			appData.ServeHTTP(c.Writer, c.Request)
 			c.Abort()
 			return
@@ -154,6 +157,15 @@ func main() {
 
 	// Register explicitly so Gin cannot redirect GET to the /:username/ route.
 	router.Any("/pinterest-session", func(c *gin.Context) {
+		pinterestSession.ServeHTTP(c.Writer, c.Request)
+	})
+	router.POST("/pinterest-session/check", func(c *gin.Context) {
+		pinterestSession.ServeHTTP(c.Writer, c.Request)
+	})
+	router.POST("/pinterest-session/export", func(c *gin.Context) {
+		pinterestSession.ServeHTTP(c.Writer, c.Request)
+	})
+	router.POST("/pinterest-session/restore", func(c *gin.Context) {
 		pinterestSession.ServeHTTP(c.Writer, c.Request)
 	})
 
@@ -230,7 +242,7 @@ type searchFailure struct {
 func fetchSearchPage(c *gin.Context, upstreamQuery, scope, bookmark string, csrftoken *string) ([]searchResult, string, *searchFailure) {
 	apiURL := "https://www.pinterest.com/resource/BaseSearchResource/get/"
 	options := map[string]interface{}{
-		"query": upstreamQuery,
+		"query":             upstreamQuery,
 		"additional_fields": resolverPinFields,
 	}
 	if scope != "" {
@@ -322,10 +334,13 @@ func fetchSearchPage(c *gin.Context, upstreamQuery, scope, bookmark string, csrf
 			Data struct {
 				Results []struct {
 					pinOrigin
-					ID     string          `json:"id"`
-					Title json.RawMessage `json:"title"`
-					Description string `json:"description"`
-					Pinner struct { FullName string `json:"full_name"`; Username string `json:"username"` } `json:"pinner"`
+					ID          string          `json:"id"`
+					Title       json.RawMessage `json:"title"`
+					Description string          `json:"description"`
+					Pinner      struct {
+						FullName string `json:"full_name"`
+						Username string `json:"username"`
+					} `json:"pinner"`
 					Images PinterestImages `json:"images"`
 					PinterestMedia
 				} `json:"results"`
@@ -409,7 +424,9 @@ func searchHandler(c *gin.Context) {
 		c.SetCookie("bookmark", "", -1, "/", "", c.Request.TLS != nil, true)
 		bookmark = ""
 	}
-	if cursor, exists := c.GetQuery("cursor"); exists { bookmark = cursor }
+	if cursor, exists := c.GetQuery("cursor"); exists {
+		bookmark = cursor
+	}
 
 	csrftoken := ""
 	if cookie, err := c.Cookie("csrftoken"); err == nil && cookie != "" {
@@ -459,10 +476,10 @@ func searchHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "results.html", gin.H{
-		"Results":  results,
-        "WallContext": rememberPreviousWall(searchWallPins(results),"search:"+query,bookmark),
-		"Bookmark": bookmark,
-		"Query":    query,
+		"Results":     results,
+		"WallContext": rememberPreviousWall(searchWallPins(results), "search:"+query, bookmark),
+		"Bookmark":    bookmark,
+		"Query":       query,
 	})
 }
 
@@ -568,18 +585,21 @@ func pinHandler(c *gin.Context) {
 		"RelatedLoadError":         related == nil,
 		"PinNotFound":              pinStatus == http.StatusNotFound && !strings.HasPrefix(pinID, "e1_"),
 		"PinPreviewOnly":           previewOnly,
-		"Query":   query,
-		"From":    from,
-		"PinSelfURL": c.Request.URL.RequestURI(),
-        "PageURL": absURL(c, c.Request.URL.RequestURI()),
-		"OGImage": ogImage,
+		"Query":                    query,
+		"From":                     from,
+		"PinSelfURL":               c.Request.URL.RequestURI(),
+		"PageURL":                  absURL(c, c.Request.URL.RequestURI()),
+		"OGImage":                  ogImage,
 	})
 }
 
 // readPinResource distinguishes an unavailable/malformed upstream response from
 // a successful resource whose data happens to be empty.
-type pinResourceFailure struct { status int }
-func (e *pinResourceFailure) Error() string { return fmt.Sprintf("Pinterest resource HTTP %d", e.status) }
+type pinResourceFailure struct{ status int }
+
+func (e *pinResourceFailure) Error() string {
+	return fmt.Sprintf("Pinterest resource HTTP %d", e.status)
+}
 
 func readPinResource(resp *http.Response) ([]byte, error) {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -588,20 +608,26 @@ func readPinResource(resp *http.Response) ([]byte, error) {
 	var reader io.Reader = resp.Body
 	if strings.Contains(strings.ToLower(resp.Header.Get("Content-Encoding")), "gzip") {
 		gzr, err := gzip.NewReader(resp.Body)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		defer gzr.Close()
 		reader = gzr
 	}
 	body, err := io.ReadAll(reader)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	var envelope struct {
 		Response struct {
-			Data json.RawMessage `json:"data"`
-			Error json.RawMessage `json:"error"`
-			Status string `json:"status"`
+			Data   json.RawMessage `json:"data"`
+			Error  json.RawMessage `json:"error"`
+			Status string          `json:"status"`
 		} `json:"resource_response"`
 	}
-	if err := json.Unmarshal(body, &envelope); err != nil { return nil, err }
+	if err := json.Unmarshal(body, &envelope); err != nil {
+		return nil, err
+	}
 	r := envelope.Response
 	if (len(r.Error) > 0 && string(r.Error) != "null") ||
 		(r.Status != "" && r.Status != "success") ||
@@ -656,7 +682,9 @@ func fetchPinDetailsWithClient(pinID string, csrftoken string, client *http.Clie
 	bodyBytes, err := readPinResource(resp)
 	if err != nil {
 		var failure *pinResourceFailure
-		if errors.As(err, &failure) { return Pin{ID: pinID}, failure.status }
+		if errors.As(err, &failure) {
+			return Pin{ID: pinID}, failure.status
+		}
 		return Pin{ID: pinID}, http.StatusBadGateway
 	}
 
@@ -685,8 +713,8 @@ func fetchPinDetailsWithClient(pinID string, csrftoken string, client *http.Clie
 	data := singlePinResponse.ResourceResponse.Data
 
 	pin := Pin{
-		pinOrigin: data.pinOrigin,
-		UpstreamID: data.ID,
+		pinOrigin:   data.pinOrigin,
+		UpstreamID:  data.ID,
 		ID:          pinID,
 		VideoURL:    videoProxyURL(data.PinterestMedia),
 		Title:       strings.TrimSpace(data.Title),
@@ -702,7 +730,9 @@ func fetchPinDetailsWithClient(pinID string, csrftoken string, client *http.Clie
 		pin.ImageWidth = bestImage.Width
 	}
 
-	if pin.ImageURL == "" && pin.VideoURL == "" { return pin, http.StatusBadGateway }
+	if pin.ImageURL == "" && pin.VideoURL == "" {
+		return pin, http.StatusBadGateway
+	}
 	rememberPinPreview(pin)
 	return pin, http.StatusOK
 }
@@ -716,9 +746,9 @@ func fetchRelatedPinsWithClient(pinID string, csrftoken string, bookmark string,
 	apiURL := "https://www.pinterest.com/resource/RelatedModulesResource/get/"
 	sourceURL := fmt.Sprintf("/pin/%s/", pinID)
 	options := map[string]interface{}{
-		"pin_id":    pinID,
-		"page_size": pageSize,
-		"source":    "pin",
+		"pin_id":            pinID,
+		"page_size":         pageSize,
+		"source":            "pin",
 		"additional_fields": resolverPinFields,
 	}
 	if bookmark != "" {
@@ -822,7 +852,7 @@ func fetchRelatedPinsWithClient(pinID string, csrftoken string, bookmark string,
 		bestImage := bestPinImage(result.Images, result.PinterestMedia)
 		if bestImage != nil {
 			related = append(related, Pin{
-				pinOrigin: result.pinOrigin,
+				pinOrigin:   result.pinOrigin,
 				ID:          result.ID,
 				VideoURL:    videoProxyURL(result.PinterestMedia),
 				ImageURL:    fmt.Sprintf("/image?url=%s", url.QueryEscape(bestImage.URL)),
@@ -866,7 +896,9 @@ func savedHandler(c *gin.Context) {
 		c.SetCookie("bookmark", "", -1, "/", "", c.Request.TLS != nil, true)
 		bookmark = ""
 	}
-	if cursor, exists := c.GetQuery("cursor"); exists { bookmark = cursor }
+	if cursor, exists := c.GetQuery("cursor"); exists {
+		bookmark = cursor
+	}
 
 	pinsBookmark := ""
 	if cookie, err := c.Cookie("pins_bookmark"); err == nil && cookie != "" {
@@ -876,10 +908,15 @@ func savedHandler(c *gin.Context) {
 		c.SetCookie("pins_bookmark", "", -1, "/", "", c.Request.TLS != nil, true)
 		pinsBookmark = ""
 	}
-	if cursor, exists := c.GetQuery("pins_cursor"); exists { pinsBookmark = cursor }
+	if cursor, exists := c.GetQuery("pins_cursor"); exists {
+		pinsBookmark = cursor
+	}
 
 	profile, profileToken := fetchUserProfile(username, csrftoken)
-    if profile.Username == "" { profile.Username = username; profile.FullName = username }
+	if profile.Username == "" {
+		profile.Username = username
+		profile.FullName = username
+	}
 	if profileToken != "" {
 		csrftoken = profileToken
 		c.SetCookie("csrftoken", csrftoken, 0, "/", "", c.Request.TLS != nil, true)
@@ -913,7 +950,7 @@ func savedHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "profile.html", gin.H{
 		"Profile":      profile,
 		"Boards":       boards,
-        "SourceError": profileSourceError(boards == nil && profilePins == nil),
+		"SourceError":  profileSourceError(boards == nil && profilePins == nil),
 		"ProfilePins":  profilePins,
 		"Bookmark":     nextBookmark,
 		"PinsBookmark": pinsNextBookmark,
@@ -944,10 +981,15 @@ func createdHandler(c *gin.Context) {
 		c.SetCookie("bookmark", "", -1, "/", "", c.Request.TLS != nil, true)
 		bookmark = ""
 	}
-	if cursor, exists := c.GetQuery("cursor"); exists { bookmark = cursor }
+	if cursor, exists := c.GetQuery("cursor"); exists {
+		bookmark = cursor
+	}
 
 	profile, profileToken := fetchUserProfile(username, csrftoken)
-    if profile.Username == "" { profile.Username = username; profile.FullName = username }
+	if profile.Username == "" {
+		profile.Username = username
+		profile.FullName = username
+	}
 	if profileToken != "" {
 		csrftoken = profileToken
 		c.SetCookie("csrftoken", csrftoken, 0, "/", "", c.Request.TLS != nil, true)
@@ -967,13 +1009,13 @@ func createdHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "profile.html", gin.H{
-		"Profile":  profile,
-		"Pins":     pins,
-        "Created": true,
-        "SourceError": profileSourceError(pins == nil),
-		"Bookmark": nextBookmark,
-		"PageURL":  absURL(c, c.Request.URL.RequestURI()),
-		"OGImage":  ogImage,
+		"Profile":     profile,
+		"Pins":        pins,
+		"Created":     true,
+		"SourceError": profileSourceError(pins == nil),
+		"Bookmark":    nextBookmark,
+		"PageURL":     absURL(c, c.Request.URL.RequestURI()),
+		"OGImage":     ogImage,
 	})
 }
 
@@ -1000,7 +1042,9 @@ func boardHandler(c *gin.Context) {
 		c.SetCookie("bookmark", "", -1, "/", "", c.Request.TLS != nil, true)
 		bookmark = ""
 	}
-	if cursor, exists := c.GetQuery("cursor"); exists { bookmark = cursor }
+	if cursor, exists := c.GetQuery("cursor"); exists {
+		bookmark = cursor
+	}
 
 	boardInfo := fetchBoardInfo(username, slug, csrftoken)
 	var pins []Pin
@@ -1027,12 +1071,12 @@ func boardHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "board.html", gin.H{
-		"Board":    boardInfo,
-        "SourceError": profileSourceError(pins == nil),
-		"Pins":     pins,
-		"Bookmark": nextBookmark,
-		"PageURL":  absURL(c, c.Request.URL.RequestURI()),
-		"OGImage":  ogImage,
+		"Board":       boardInfo,
+		"SourceError": profileSourceError(pins == nil),
+		"Pins":        pins,
+		"Bookmark":    nextBookmark,
+		"PageURL":     absURL(c, c.Request.URL.RequestURI()),
+		"OGImage":     ogImage,
 	})
 }
 
@@ -1105,8 +1149,11 @@ func fetchUserProfile(username string, csrftoken string) (Profile, string) {
 				ImageLargeURL  string `json:"image_large_url"`
 				ImageMediumURL string `json:"image_medium_url"`
 				WebsiteURL     string `json:"website_url"`
-				ProfileCover struct {
-					Images map[string]struct { URL string `json:"url"`; Width int `json:"width"` } `json:"images"`
+				ProfileCover   struct {
+					Images map[string]struct {
+						URL   string `json:"url"`
+						Width int    `json:"width"`
+					} `json:"images"`
 				} `json:"profile_cover"`
 			} `json:"data"`
 		} `json:"resource_response"`
@@ -1198,7 +1245,9 @@ func fetchBoards(username string, csrftoken string, bookmark string) ([]Board, s
 		return nil, "", ""
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK { return nil, "", "" }
+	if resp.StatusCode != http.StatusOK {
+		return nil, "", ""
+	}
 
 	newToken := ""
 	for _, ck := range resp.Cookies() {
@@ -1244,7 +1293,9 @@ func fetchBoards(username string, csrftoken string, bookmark string) ([]Board, s
 		return nil, "", newToken
 	}
 
-	if responseData.ResourceResponse.Data == nil { return nil, "", newToken }
+	if responseData.ResourceResponse.Data == nil {
+		return nil, "", newToken
+	}
 	boards := make([]Board, 0)
 	for _, r := range responseData.ResourceResponse.Data {
 		if r.Type != "board" || r.ID == "" {
@@ -1319,7 +1370,9 @@ func fetchUserCreatedPins(userID string, username string, csrftoken string, book
 		return nil, ""
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK { return nil, "" }
+	if resp.StatusCode != http.StatusOK {
+		return nil, ""
+	}
 
 	var reader io.Reader = resp.Body
 	contentEncoding := strings.ToLower(strings.TrimSpace(resp.Header.Get("Content-Encoding")))
@@ -1354,7 +1407,9 @@ func fetchUserCreatedPins(userID string, username string, csrftoken string, book
 		return nil, ""
 	}
 
-	if responseData.ResourceResponse.Data == nil { return nil, "" }
+	if responseData.ResourceResponse.Data == nil {
+		return nil, ""
+	}
 	pins := make([]Pin, 0)
 	for _, result := range responseData.ResourceResponse.Data {
 		if result.Type != "pin" || result.ID == "" {
@@ -1430,7 +1485,9 @@ func fetchUserProfilePins(username string, csrftoken string, bookmark string) ([
 		return nil, ""
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK { return nil, "" }
+	if resp.StatusCode != http.StatusOK {
+		return nil, ""
+	}
 
 	var reader io.Reader = resp.Body
 	contentEncoding := strings.ToLower(strings.TrimSpace(resp.Header.Get("Content-Encoding")))
@@ -1465,7 +1522,9 @@ func fetchUserProfilePins(username string, csrftoken string, bookmark string) ([
 		return nil, ""
 	}
 
-	if responseData.ResourceResponse.Data == nil { return nil, "" }
+	if responseData.ResourceResponse.Data == nil {
+		return nil, ""
+	}
 	pins := make([]Pin, 0)
 	for _, result := range responseData.ResourceResponse.Data {
 		if result.Type != "pin" || result.ID == "" {
@@ -1632,7 +1691,9 @@ func fetchBoardPins(boardID string, sourceURL string, csrftoken string, bookmark
 		return nil, "", ""
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK { return nil, "", "" }
+	if resp.StatusCode != http.StatusOK {
+		return nil, "", ""
+	}
 
 	newToken := ""
 	for _, ck := range resp.Cookies() {
@@ -1675,7 +1736,9 @@ func fetchBoardPins(boardID string, sourceURL string, csrftoken string, bookmark
 		return nil, "", newToken
 	}
 
-	if responseData.ResourceResponse.Data == nil { return nil, "", newToken }
+	if responseData.ResourceResponse.Data == nil {
+		return nil, "", newToken
+	}
 	pins := make([]Pin, 0)
 	for _, result := range responseData.ResourceResponse.Data {
 		if result.Type != "pin" || result.ID == "" {
@@ -1746,7 +1809,15 @@ var safeClient = &http.Client{
 }
 
 func cleanBookmark(value string) string {
- if value == "-end-" { return "" }; return value
+	if value == "-end-" {
+		return ""
+	}
+	return value
 }
 
-func profileSourceError(failed bool) string { if failed { return "Pinterest could not provide this public feed. Retry to check again; this does not mean the account has no pins." }; return "" }
+func profileSourceError(failed bool) string {
+	if failed {
+		return "Pinterest could not provide this public feed. Retry to check again; this does not mean the account has no pins."
+	}
+	return ""
+}
