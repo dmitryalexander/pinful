@@ -41,3 +41,6 @@ responses are no-store; interface files revalidate while media keeps its own pol
 
 Menu tutorials: compact uppercase action headings sit beside amber input caps.
 Mouse actions use matching CLICK badges; explanatory text remains below.
+
+Tutorial refinement: title-case Click badges and centered rectangular frames
+for the combined input and uppercase heading.

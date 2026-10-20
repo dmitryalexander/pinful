@@ -1,11 +1,10 @@
-/* Quiet uppercase headings sit beside the input, with copy on its own line. */
-body :is(.pn-panel,main) .pt-tutorial-card{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:8px 12px}
-body :is(.pn-panel,main) .pt-tutorial-card.pt-tutorial-with-input{grid-template-columns:auto minmax(0,1fr)}
-body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-keys{grid-column:1;grid-row:1;display:flex;align-items:center;align-self:start;gap:4px;white-space:nowrap;margin:0}
-body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-title{grid-column:1/-1;grid-row:1;align-self:center;min-width:0;display:block;margin:0;font:500 10px/1.55 system-ui;letter-spacing:.11em;text-transform:uppercase;color:#e4dfd3;overflow-wrap:anywhere}
-body :is(.pn-panel,main) .pt-tutorial-with-input>.pt-tutorial-title{grid-column:2}
+/* Center each input/title pair in its own quiet rectangular heading. */
+body :is(.pn-panel,main) .pt-tutorial-card{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:10px}
+body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-heading{box-sizing:border-box;grid-column:1/-1;grid-row:auto;display:flex;align-items:center;justify-content:center;gap:10px;justify-self:center;width:fit-content;max-width:100%;min-height:41px;padding:7px 11px;border:1px solid #4b483e;border-radius:3px;background:#1b1b19}
+body :is(.pn-panel,main) .pt-tutorial-heading>.pt-tutorial-keys{display:flex;align-items:center;flex:0 0 auto;gap:4px;white-space:nowrap;margin:0}
+body :is(.pn-panel,main) .pt-tutorial-heading>.pt-tutorial-title{min-width:0;display:block;margin:0;font:500 10px/1.55 system-ui;letter-spacing:.11em;text-transform:uppercase;text-align:center;color:#e4dfd3;overflow-wrap:anywhere}
 body :is(.pn-panel,main) .pt-tutorial-card>span:not(.pt-input-cap),body :is(.pn-panel,main) .pt-tutorial-card>em{grid-column:1/-1;grid-row:auto;margin:0}
 body :is(.pn-panel,main) .pt-tutorial :is(kbd,.pt-input-cap){box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-width:25px;min-height:25px;padding:2px 6px;margin:0 2px;border:1px solid #b58a39;border-bottom-width:2px;border-radius:3px;background:#241f15;color:#e6ad45;font:500 11px/1.5 system-ui;letter-spacing:.02em;text-align:center;vertical-align:baseline;white-space:nowrap}
-body :is(.pn-panel,main) .pt-tutorial .pt-input-cap{text-transform:uppercase;font-size:10px;letter-spacing:.08em;cursor:default}
+body :is(.pn-panel,main) .pt-tutorial .pt-input-cap{text-transform:none;font-size:11px;letter-spacing:.02em;cursor:default}
 body :is(.pn-panel,main) .pt-tutorial-keys :is(kbd,.pt-input-cap){margin:0}
-@media(max-width:420px){body :is(.pn-panel,main) .pt-tutorial-card{column-gap:9px}body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-title{letter-spacing:.08em}}
+@media(max-width:420px){body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-heading{gap:8px;padding-inline:8px}body :is(.pn-panel,main) .pt-tutorial-heading>.pt-tutorial-title{letter-spacing:.08em}}

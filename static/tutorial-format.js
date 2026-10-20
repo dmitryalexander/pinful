@@ -4,8 +4,8 @@
   if (new URLSearchParams(location.search).get('pt_page') !== 'menu') return;
   const guides = '.pt-guide,.pt-feed-guide,.pt-fav-guide,.pt-group-guide,.pt-history-guide,.pt-hidden-guide';
   const cards = '.pt-hotkeys-card,.pt-feed-guide-card,.pt-fav-guide-card,.pt-group-guide-card,.pt-history-guide-card,.pt-hidden-guide-card';
-  function clickCap(text = 'CLICK') {
-    const cap = document.createElement('span'); cap.className = 'pt-input-cap'; cap.textContent = text; return cap;
+  function clickCap(text = 'Click') {
+    const cap = document.createElement('span'); cap.className = 'pt-input-cap'; cap.textContent = 'Click'; return cap;
   }
   function format(guide) {
     guide.classList.add('pt-tutorial');
@@ -23,6 +23,9 @@
         card.classList.add('pt-tutorial-with-input');
       }
       title.classList.add('pt-tutorial-title'); card.classList.add('pt-tutorial-card');
+      const heading = document.createElement('div'); heading.className = 'pt-tutorial-heading';
+      if (inputs) heading.append(inputs);
+      heading.append(title); card.prepend(heading);
     });
     const walker = document.createTreeWalker(guide, NodeFilter.SHOW_TEXT), texts = [];
     while (walker.nextNode()) {
