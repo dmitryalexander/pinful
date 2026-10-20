@@ -1,6 +1,6 @@
 /* Center each input/title pair in its own quiet rectangular heading. */
 body :is(.pn-panel,main) .pt-tutorial-card{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:10px}
-body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-heading{box-sizing:border-box;grid-column:1/-1;grid-row:auto;display:flex;align-items:center;justify-content:center;gap:10px;justify-self:center;width:fit-content;max-width:100%;min-height:41px;padding:7px 11px;border:1px solid #4b483e;border-radius:3px;background:#1b1b19}
+body :is(.pn-panel,main) .pt-tutorial-card>.pt-tutorial-heading{box-sizing:border-box;grid-column:1/-1;grid-row:auto;display:flex;align-items:center;justify-content:center;gap:10px;justify-self:stretch;width:auto;max-width:none;min-height:41px;margin:-10px -12px 0;padding:9px 12px;border:0;border-bottom:1px solid #45453e;border-radius:9px;background:#1b1b19}
 body :is(.pn-panel,main) .pt-tutorial-heading>.pt-tutorial-keys{display:flex;align-items:center;flex:0 0 auto;gap:4px;white-space:nowrap;margin:0}
 body :is(.pn-panel,main) .pt-tutorial-heading>.pt-tutorial-title{min-width:0;display:block;margin:0;font:500 10px/1.55 system-ui;letter-spacing:.11em;text-transform:uppercase;text-align:center;color:#e4dfd3;overflow-wrap:anywhere}
 body :is(.pn-panel,main) .pt-tutorial-card>span:not(.pt-input-cap),body :is(.pn-panel,main) .pt-tutorial-card>em{grid-column:1/-1;grid-row:auto;margin:0}
