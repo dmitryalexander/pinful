@@ -40,12 +40,13 @@
   const [art,title,intro,detail,action,target]=guides[kind];
   const section=document.createElement('section');section.id='pn-empty-guide';section.className='pn-empty-guide';section.dataset.kind=kind;section.setAttribute('aria-labelledby','pn-empty-title');
   const img=document.createElement('img');img.src='/static/tutorial-'+art+'.png';img.alt='';img.width=240;img.height=420;
+  const artLink=document.createElement('a');artLink.className='pn-empty-art';artLink.href='https://ynforma.art';artLink.target='_blank';artLink.rel='noopener noreferrer';artLink.title='ynforma.art';artLink.append(img);
   const copy=document.createElement('div'),eyebrow=document.createElement('p'),heading=document.createElement('h1'),body=document.createElement('p'),note=document.createElement('p');
   eyebrow.className='pn-empty-eyebrow';eyebrow.textContent='A little help getting started · '+(kind==='lists'?'Playlists':kind==='discover'?'Search groups':kind);
   heading.id='pn-empty-title';heading.textContent=title;body.textContent=intro;note.textContent=detail;
   const button=document.createElement(target==='search'?'button':'a');button.textContent=action;button.className='pn-empty-action';
   if(target==='search'){button.type='button';button.onclick=()=>{const input=document.querySelector('.pt-search input,#search');input?.focus();input?.select();};}else button.href='/?pt_page='+target;
-  copy.append(eyebrow,heading,body,note,button);section.append(img,copy);wall.before(section);
+  copy.append(eyebrow,heading,body,note,button);section.append(artLink,copy);wall.before(section);
  }
  window.pinfulEmptyGuides={sync,chooseKind};
  function start(){sync();let scheduled=false;new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;sync();});}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['hidden','aria-busy']});}
